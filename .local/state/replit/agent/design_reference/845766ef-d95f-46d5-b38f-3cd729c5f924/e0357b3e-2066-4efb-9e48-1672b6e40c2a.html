@@ -1,0 +1,832 @@
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintEasy Thailand - AI-Powered Web-to-Print Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        },
+                        secondary: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed'
+                        },
+                        accent: {
+                            500: '#f97316',
+                            600: '#ea580c'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation Header -->
+    <!-- @COMPONENT: Navigation [responsive navigation with language switcher] -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 w-10 h-10 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-print text-white text-lg"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900">PrintEasy Thailand</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-primary-600 font-medium">หน้าแรก</a>
+                    <a href="#" class="text-gray-700 hover:text-primary-600 font-medium">ผลิตภัณฑ์</a>
+                    <a href="#" class="text-gray-700 hover:text-primary-600 font-medium">เทมเพลต</a>
+                    <a href="#" class="text-gray-700 hover:text-primary-600 font-medium">AI Designer</a>
+                    <a href="#" class="text-gray-700 hover:text-primary-600 font-medium">ติดต่อเรา</a>
+                </div>
+
+                <!-- User Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Language Switcher -->
+                    <div class="flex items-center space-x-2 text-sm">
+                        <button class="px-2 py-1 bg-primary-500 text-white rounded">TH</button>
+                        <button class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded">EN</button>
+                    </div>
+                    
+                    <!-- Shopping Cart -->
+                    <button class="relative p-2 text-gray-600 hover:text-primary-600">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span class="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+                        เข้าสู่ระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation -->
+
+    <!-- Hero Section -->
+    <!-- @COMPONENT: HeroSection [main banner with AI features highlight] -->
+    <section class="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="bg-secondary-100 text-secondary-600 px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-robot mr-1"></i>
+                            AI-Powered
+                        </span>
+                        <span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
+                            New Feature
+                        </span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                        สร้างงานพิมพ์ด้วย
+                        <span class="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                            AI Designer
+                        </span>
+                    </h1>
+                    <p class="text-xl text-gray-600 mb-8">
+                        แพลตฟอร์มออนไลน์ที่ช่วยให้คุณออกแบบและสั่งพิมพ์ได้ง่ายดาย ด้วยเทคโนโลยี AI ที่ช่วยสร้างดีไซน์อัตโนมัติ
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-primary-500 text-white px-8 py-4 rounded-xl hover:bg-primary-600 transition-colors font-semibold text-lg">
+                            <i class="fas fa-magic mr-2"></i>
+                            เริ่มออกแบบด้วย AI
+                        </button>
+                        <button class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl hover:border-primary-500 hover:text-primary-600 transition-colors font-semibold">
+                            <i class="fas fa-play mr-2"></i>
+                            ดูตัวอย่างการใช้งาน
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <!-- AI Design Editor Preview with floating windows -->
+                    <div class="bg-white rounded-2xl shadow-2xl p-6 transform rotate-2">
+                        <div class="bg-gray-100 rounded-lg h-64 flex items-center justify-center mb-4">
+                            <div class="text-center">
+                                <i class="fas fa-image text-4xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-500">AI Design Canvas</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                            <span class="text-sm text-gray-500 ml-2">PrintEasy Designer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating AI Feature Cards -->
+                    <div class="absolute -top-4 -left-4 bg-white rounded-xl shadow-lg p-3 border border-purple-100">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-brain text-purple-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">AI สร้างดีไซน์</p>
+                                <p class="text-xs text-gray-500">จากข้อความ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg p-3 border border-orange-100">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-magic text-orange-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">ตัดพื้นหลัง</p>
+                                <p class="text-xs text-gray-500">อัตโนมัติ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: HeroSection -->
+
+    <!-- AI Features Section -->
+    <!-- @COMPONENT: AIFeatures [showcase of AI capabilities] -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    เทคโนโลยี AI ที่ช่วยให้การออกแบบง่ายขึ้น
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    ด้วยปัญญาประดิษฐ์ขั้นสูง เราช่วยให้คุณสร้างดีไซน์ระดับมืออาชีพได้ภายในไม่กี่นาที
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- @MAP: aiFeatures.map(feature => ( -->
+                <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-100 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">AI Text-to-Design</h3>
+                    <p class="text-gray-600 mb-6">
+                        แค่พิมพ์ข้อความบรรยายสิ่งที่คุณต้องการ AI จะสร้างดีไซน์ให้คุณทันที พร้อมเลือกสีและฟอนต์ที่เหมาะสม
+                    </p>
+                    <button class="text-purple-600 font-semibold hover:text-purple-700">
+                        ลองใช้งาน <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 border border-orange-100 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-cut text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">ตัดพื้นหลังอัตโนมัติ</h3>
+                    <p class="text-gray-600 mb-6">
+                        อัปโลดรูปภาพแล้ว AI จะตัดพื้นหลังให้อัตโนมัติ ได้ผลลัพธ์ที่แม่นยำและสะอาด ประหยัดเวลาการแต่งรูป
+                    </p>
+                    <button class="text-orange-600 font-semibold hover:text-orange-700">
+                        ลองใช้งาน <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-8 border border-green-100 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-palette text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">แนะนำสีอัจฉริยะ</h3>
+                    <p class="text-gray-600 mb-6">
+                        AI วิเคราะห์เนื้อหาและแบรนด์ของคุณ แล้วแนะนำชุดสีที่เหมาะสมที่สุด เพื่อให้ดีไซน์ดูโดดเด่นและมีอัตลักษณ์
+                    </p>
+                    <button class="text-green-600 font-semibold hover:text-green-700">
+                        ลองใช้งาน <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: AIFeatures -->
+
+    <!-- Product Categories -->
+    <!-- @COMPONENT: ProductCategories [product catalog with dynamic pricing] -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    ผลิตภัณฑ์ยอดนิยม
+                </h2>
+                <p class="text-xl text-gray-600">
+                    เลือกจากผลิตภัณฑ์หลากหลายประเภท พร้อมคำนวณราคาแบบเรียลไทม์
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- @MAP: productCategories.map(category => ( -->
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                    <!-- High-quality modern business card design -->
+                    <img src="https://pixabay.com/get/ged617bd55b82a76b94dcf59134fca9bf582361cbf6c8e8d0bad65556874cbbf7661f945e68d2b64dec318321dd9f4ab5637fe0a1f7cb20b9aef38670317b3652_1280.jpg" alt="Professional business cards" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">นามบัตร</h3>
+                        <p class="text-gray-600 mb-4">นามบัตรคุณภาพสูง พิมพ์บนกระดาษเคลือบ</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-primary-600">฿299</span>
+                            <span class="text-sm text-gray-500">เริ่มต้น 100 ใบ</span>
+                        </div>
+                        <button class="w-full bg-primary-500 text-white py-3 rounded-xl hover:bg-primary-600 transition-colors font-semibold">
+                            <i class="fas fa-magic mr-2"></i>
+                            ออกแบบด้วย AI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                    <!-- Creative flyer design samples -->
+                    <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300" alt="Creative marketing flyers" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">แผ่นพับ</h3>
+                        <p class="text-gray-600 mb-4">แผ่นพับโฆษณา พิมพ์สีสันสดใส</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-primary-600">฿129</span>
+                            <span class="text-sm text-gray-500">เริ่มต้น 50 ใบ</span>
+                        </div>
+                        <button class="w-full bg-primary-500 text-white py-3 rounded-xl hover:bg-primary-600 transition-colors font-semibold">
+                            <i class="fas fa-magic mr-2"></i>
+                            ออกแบบด้วย AI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                    <!-- Professional poster designs -->
+                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300" alt="Professional poster designs" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">โปสเตอร์</h3>
+                        <p class="text-gray-600 mb-4">โปสเตอร์ขนาดใหญ่ คุณภาพระดับมืออาชีพ</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-primary-600">฿89</span>
+                            <span class="text-sm text-gray-500">ขนาด A3</span>
+                        </div>
+                        <button class="w-full bg-primary-500 text-white py-3 rounded-xl hover:bg-primary-600 transition-colors font-semibold">
+                            <i class="fas fa-magic mr-2"></i>
+                            ออกแบบด้วย AI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                    <!-- Premium banner designs -->
+                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300" alt="Premium advertising banners" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">แบนเนอร์</h3>
+                        <p class="text-gray-600 mb-4">แบนเนอร์โฆษณา ทนทาน กันน้ำ</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-primary-600">฿399</span>
+                            <span class="text-sm text-gray-500">ขนาด 1x2 เมตร</span>
+                        </div>
+                        <button class="w-full bg-primary-500 text-white py-3 rounded-xl hover:bg-primary-600 transition-colors font-semibold">
+                            <i class="fas fa-magic mr-2"></i>
+                            ออกแบบด้วย AI
+                        </button>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: ProductCategories -->
+
+    <!-- Design Editor Preview -->
+    <!-- @COMPONENT: DesignEditor [canvas-based design interface] -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    เครื่องมือออกแบบขั้นสูง
+                </h2>
+                <p class="text-xl text-gray-600">
+                    ออกแบบแบบ Drag & Drop พร้อมเครื่องมือ AI ช่วยให้การออกแบบง่ายและรวดเร็วยิ่งขึ้น
+                </p>
+            </div>
+
+            <div class="bg-gray-100 rounded-3xl overflow-hidden shadow-2xl">
+                <!-- Editor Interface Mockup -->
+                <div class="bg-gray-800 px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                        </div>
+                        <span class="text-white font-medium">PrintEasy AI Designer</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-robot mr-1"></i>
+                            AI Assistant
+                        </button>
+                        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            บันทึก
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex">
+                    <!-- Toolbar -->
+                    <div class="w-20 bg-gray-200 p-4 space-y-4">
+                        <button class="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+                            <i class="fas fa-mouse-pointer text-gray-600"></i>
+                        </button>
+                        <button class="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+                            <i class="fas fa-font text-gray-600"></i>
+                        </button>
+                        <button class="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+                            <i class="fas fa-image text-gray-600"></i>
+                        </button>
+                        <button class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+                            <i class="fas fa-magic text-purple-600"></i>
+                        </button>
+                    </div>
+
+                    <!-- Canvas Area -->
+                    <div class="flex-1 bg-white p-8">
+                        <div class="bg-white shadow-lg rounded-lg p-8 mx-auto" style="width: 400px; height: 240px; position: relative;">
+                            <!-- Business Card Canvas -->
+                            <div class="absolute inset-4 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                                        <i class="fas fa-user text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="font-bold text-gray-900 mb-1" data-bind="user.name">จอห์น สมิธ</h3>
+                                    <p class="text-sm text-gray-600" data-bind="user.title">นักพัฒนาซอฟต์แวร์</p>
+                                    <p class="text-xs text-gray-500 mt-2" data-bind="user.contact">john@example.com | 081-234-5678</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Properties Panel -->
+                    <div class="w-80 bg-gray-50 p-6 space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-4">คุณสมบัติ</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ฟอนต์</label>
+                                    <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                        <option>Sarabun</option>
+                                        <option>Prompt</option>
+                                        <option>Inter</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ขนาดตัวอักษร</label>
+                                    <input type="range" class="w-full" min="8" max="48" value="16">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">สี</label>
+                                    <div class="flex space-x-2">
+                                        <div class="w-8 h-8 bg-primary-500 rounded border-2 border-white shadow"></div>
+                                        <div class="w-8 h-8 bg-secondary-500 rounded border-2 border-white shadow"></div>
+                                        <div class="w-8 h-8 bg-accent-500 rounded border-2 border-white shadow"></div>
+                                        <div class="w-8 h-8 bg-gray-800 rounded border-2 border-white shadow"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Suggestions -->
+                        <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <i class="fas fa-lightbulb text-purple-600"></i>
+                                <h4 class="font-semibold text-purple-900">แนะนำจาก AI</h4>
+                            </div>
+                            <p class="text-sm text-purple-700 mb-3">
+                                ลองใช้สีน้าเงินเข้มแทนสีฟ้า เพื่อให้ดูเป็นทางการมากขึ้น
+                            </p>
+                            <button class="text-purple-600 text-sm font-medium hover:text-purple-700">
+                                ใช้คำแนะนำนี้
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: DesignEditor -->
+
+    <!-- Pricing Calculator -->
+    <!-- @COMPONENT: PricingCalculator [dynamic pricing based on options] -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">คำนวณราคาแบบเรียลไทม์</h2>
+                        <p class="text-xl text-gray-600">เลือกออปชั่นและดูราคาที่อัปเดตทันที</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Configuration Panel -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-3">ประเภทผลิตภัณฑ์</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button class="p-4 border-2 border-primary-500 bg-primary-50 rounded-xl text-primary-700 font-medium">
+                                        นามบัตร
+                                    </button>
+                                    <button class="p-4 border border-gray-300 rounded-xl hover:border-gray-400 transition-colors">
+                                        แผ่นพับ
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-3">จำนวน</label>
+                                <select class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:border-primary-500 focus:ring-2 focus:ring-primary-200">
+                                    <option>100 ใบ</option>
+                                    <option>200 ใบ</option>
+                                    <option>500 ใบ</option>
+                                    <option>1,000 ใบ</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-3">ประเภทกระดาษ</label>
+                                <div class="space-y-3">
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" name="paper" class="text-primary-500 mr-3" checked>
+                                        <div>
+                                            <span class="font-medium">Art Card 310g</span>
+                                            <span class="text-sm text-gray-500 ml-2">+฿0</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" name="paper" class="text-primary-500 mr-3">
+                                        <div>
+                                            <span class="font-medium">Premium Card 350g</span>
+                                            <span class="text-sm text-gray-500 ml-2">+฿50</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-3">ตัวเลือกเพิ่มเติม</label>
+                                <div class="space-y-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="text-primary-500 mr-3">
+                                        <span>เคลือบ UV <span class="text-sm text-gray-500">(+฿80)</span></span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="text-primary-500 mr-3">
+                                        <span>มุมโค้ง <span class="text-sm text-gray-500">(+฿30)</span></span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="text-primary-500 mr-3">
+                                        <span>ฟอยล์เงิน/ทอง <span class="text-sm text-gray-500">(+฿150)</span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Summary -->
+                        <div>
+                            <div class="bg-gradient-to-br from-primary-50 to-blue-50 rounded-2xl p-6 mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-4">สรุปราคา</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">นามบัตร (100 ใบ)</span>
+                                        <span class="font-medium">฿299</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">กระดาษ Art Card 310g</span>
+                                        <span class="font-medium">฿0</span>
+                                    </div>
+                                    <hr class="border-gray-300">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">ค่าจัดส่ง</span>
+                                        <span class="font-medium text-green-600">ฟรี</span>
+                                    </div>
+                                    <hr class="border-gray-300">
+                                    <div class="flex justify-between text-xl font-bold">
+                                        <span>รวมทั้งหมด</span>
+                                        <span class="text-primary-600">฿299</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PromptPay Payment Options -->
+                            <div class="space-y-4">
+                                <h4 class="font-semibold text-gray-900">วิธีการชำระเงิน</h4>
+                                <div class="flex space-x-3">
+                                    <button class="flex-1 p-3 border-2 border-blue-500 bg-blue-50 rounded-xl flex items-center justify-center space-x-2">
+                                        <i class="fas fa-qrcode text-blue-600"></i>
+                                        <span class="font-medium text-blue-700">PromptPay</span>
+                                    </button>
+                                    <button class="flex-1 p-3 border border-gray-300 rounded-xl flex items-center justify-center space-x-2 hover:border-gray-400">
+                                        <i class="fas fa-credit-card text-gray-600"></i>
+                                        <span class="font-medium text-gray-700">บัตรเครดิต</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button class="w-full bg-primary-500 text-white py-4 rounded-xl hover:bg-primary-600 transition-colors font-semibold text-lg mt-6">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                เพิ่มลงตะกร้า
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: PricingCalculator -->
+
+    <!-- Customer Reviews -->
+    <!-- @COMPONENT: CustomerReviews [testimonials and social proof] -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    ลูกค้าพูดถึงเรา
+                </h2>
+                <p class="text-xl text-gray-600">
+                    มากกว่า 10,000+ ลูกค้าไว้วางใจให้เราดูแลงานพิมพ์
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- @MAP: customerReviews.map(review => ( -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="flex text-yellow-400 text-lg">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <span class="ml-2 text-sm text-gray-600">5.0</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        "ใช้ AI ออกแบบนามบัตรได้ง่ายมาก แค่พิมพ์ข้อความก็ได้ดีไซน์สวยๆ แล้ว คุณภาพการพิมพ์ก็ดีเยี่ยม จะใช้บริการต่อแน่นอน"
+                    </p>
+                    <div class="flex items-center">
+                        <!-- Customer avatar showing a professional Thai businesswoman -->
+                        <img src="https://pixabay.com/get/g11bdcd548c7226686fd87fdcf1910ddb147e0f1c1e20804663d3dde9c000d644fc00aecaaf9b58ab8352b3b017e4deedaf21a515edff7ab08a32e16dbc413ce8_1280.jpg" alt="Customer avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900" data-mock="true">นางสาว สมจิตร ใจดี</p>
+                            <p class="text-sm text-gray-600" data-mock="true">เจ้าของร้านกาแฟ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="flex text-yellow-400 text-lg">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <span class="ml-2 text-sm text-gray-600">5.0</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        "ฟีเจอร์ตัดพื้นหลังอัตโนมัติสุดยอดมาก ประหยัดเวลาได้เยอะ ไม่ต้องใช้ Photoshop แล้ว ราคาก็เหมาะสมด้วย"
+                    </p>
+                    <div class="flex items-center">
+                        <!-- Customer avatar showing a professional Thai businessman -->
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" alt="Customer avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900" data-mock="true">นาย ธนากร รุ่งเรือง</p>
+                            <p class="text-sm text-gray-600" data-mock="true">นักการตลาด</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="flex text-yellow-400 text-lg">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <span class="ml-2 text-sm text-gray-600">5.0</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        "สั่งแบนเนอร์งานเปิดร้าน ได้รับภายใน 2 วัน คุณภาพเยี่ยม สีสันสดใส ทีมงานดูแลดีมาก แนะนำเลย!"
+                    </p>
+                    <div class="flex items-center">
+                        <!-- Customer avatar showing a young Thai entrepreneur -->
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" alt="Customer avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900" data-mock="true">นางสาว วิไล ประสงค์ดี</p>
+                            <p class="text-sm text-gray-600" data-mock="true">เจ้าของร้านขายของ</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+
+            <!-- Stats Section -->
+            <div class="mt-16 grid md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-primary-600 mb-2">10,000+</div>
+                    <div class="text-gray-600">ลูกค้าที่ไว้วางใจ</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-primary-600 mb-2">50,000+</div>
+                    <div class="text-gray-600">งานพิมพ์ที่ส่งมอบ</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-primary-600 mb-2">24 ชม.</div>
+                    <div class="text-gray-600">เวลาส่งมอบเฉลี่ย</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-primary-600 mb-2">99.8%</div>
+                    <div class="text-gray-600">ลูกค้าพึงพอใจ</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: CustomerReviews -->
+
+    <!-- CTA Section -->
+    <!-- @COMPONENT: CallToAction [final conversion section] -->
+    <section class="py-20 bg-gradient-to-br from-primary-600 via-blue-600 to-secondary-600">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+                พร้อมเริ่มต้นสร้างงานพิมพ์ที่สวยงาม?
+            </h2>
+            <p class="text-xl text-blue-100 mb-8">
+                ลองใช้เครื่องมือ AI ของเราฟรี ไม่ต้องสมัครสมาชิก ไม่ต้องผูกบัตรเครดิต
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-primary-600 px-8 py-4 rounded-xl hover:bg-gray-50 transition-colors font-semibold text-lg">
+                    <i class="fas fa-magic mr-2"></i>
+                    ลองใช้ AI Designer ฟรี
+                </button>
+                <button class="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-primary-600 transition-colors font-semibold">
+                    <i class="fas fa-phone mr-2"></i>
+                    ติดต่อทีมขาย
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: CallToAction -->
+
+    <!-- Footer -->
+    <!-- @COMPONENT: Footer [comprehensive footer with links and contact info] -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <!-- Company Info -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-gradient-to-r from-primary-500 to-secondary-500 w-10 h-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-print text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold">PrintEasy Thailand</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        แพลตฟอร์มงานพิมพ์ออนไลน์ที่ใช้เทคโนโลยี AI ช่วยให้การออกแบบง่ายและรวดเร็วขึ้น
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-line"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <!-- Products -->
+                <div>
+                    <h3 class="font-semibold mb-4">ผลิตภัณฑ์</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">นามบัตร</a></li>
+                        <li><a href="#" class="hover:text-white">แผ่นพับ</a></li>
+                        <li><a href="#" class="hover:text-white">โปสเตอร์</a></li>
+                        <li><a href="#" class="hover:text-white">แบนเนอร์</a></li>
+                        <li><a href="#" class="hover:text-white">ป้ายสติ๊กเกอร์</a></li>
+                        <li><a href="#" class="hover:text-white">บรรจุภัณฑ์</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div>
+                    <h3 class="font-semibold mb-4">บริการ</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">AI Designer</a></li>
+                        <li><a href="#" class="hover:text-white">ตัดพื้นหลังอัตโนมัติ</a></li>
+                        <li><a href="#" class="hover:text-white">เทมเพลตฟรี</a></li>
+                        <li><a href="#" class="hover:text-white">ออกแบบตามใจ</a></li>
+                        <li><a href="#" class="hover:text-white">จัดส่งด่วน</a></li>
+                        <li><a href="#" class="hover:text-white">ติดตั้งป้าย</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h3 class="font-semibold mb-4">ติดต่อเรา</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            02-123-4567
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-2"></i>
+                            info@printeasy.th
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fab fa-line mr-2"></i>
+                            @printeasy
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mr-2 mt-1"></i>
+                            <span>123/45 ถ.สุขุมวิท กรุงเทพฯ 10110</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">
+                    © 2025 PrintEasy Thailand. All rights reserved.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white text-sm">นโยบายความเป็นส่วนตัว</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm">เงื่อนไขการใช้งาน</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm">คำถามที่พบบ่อย</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <!-- JavaScript for interactive features -->
+    <script>
+        // TODO: Implement business logic, API calls, or state management
+        (function() {
+            // Simple interactive demo functionality
+            
+            // Price calculator demo
+            const priceElements = document.querySelectorAll('input[type="radio"], input[type="checkbox"], select');
+            const updatePrice = () => {
+                // TODO: Implement real pricing calculation logic
+                console.log('Price updated based on selections');
+            };
+            
+            priceElements.forEach(element => {
+                element.addEventListener('change', updatePrice);
+            });
+
+            // Mobile menu toggle
+            const mobileMenuButton = document.querySelector('[data-mobile-menu]');
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', () => {
+                    // TODO: Implement mobile menu toggle
+                    console.log('Mobile menu toggled');
+                });
+            }
+
+            // Shopping cart functionality
+            const cartButtons = document.querySelectorAll('[data-add-to-cart]');
+            cartButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // TODO: Implement add to cart functionality
+                    console.log('Item added to cart');
+                });
+            });
+
+            // Language switcher
+            const langButtons = document.querySelectorAll('[data-lang]');
+            langButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // TODO: Implement language switching
+                    console.log('Language switched to:', button.dataset.lang);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

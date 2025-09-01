@@ -1,0 +1,246 @@
+{
+  "app": {
+    "name": "CognitoSphere",
+    "tagline": "ปกป้องตัวตนให้เรียบง่าย",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "retry": "ลองอีกครั้ง",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "close": "ปิด",
+    "back": "ย้อนกลับ",
+    "next": "ถัดไป",
+    "confirm": "ยืนยัน",
+    "submit": "ส่ง",
+    "search": "ค้นหา",
+    "language": "ภาษา",
+    "english": "อังกฤษ",
+    "thai": "ไทย"
+  },
+  "auth": {
+    "signIn": "เข้าสู่ระบบ",
+    "signOut": "ออกจากระบบ",
+    "signUp": "สมัครสมาชิก",
+    "forgotPassword": "ลืมรหัสผ่าน?",
+    "resetPassword": "รีเซ็ตรหัสผ่าน",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "newPassword": "รหัสผ่านใหม่",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "rememberMe": "จดจำฉัน",
+    "or": "หรือ",
+    "continueWith": "ดำเนินการต่อด้วย {{provider}}",
+    "noAccount": "ยังไม่มีบัญชีใช่ไหม?",
+    "haveAccount": "มีบัญชีอยู่แล้ว?",
+    "verificationCode": "รหัสยืนยัน",
+    "sendCode": "ส่งรหัส",
+    "resendCode": "ส่งรหัสอีกครั้ง",
+    "codeSent": "เราได้ส่งรหัสไปที่ {{destination}} แล้ว"
+  },
+  "profile": {
+    "title": "โปรไฟล์",
+    "personalInfo": "ข้อมูลส่วนตัว",
+    "updateSuccess": "อัปเดตโปรไฟล์สำเร็จ",
+    "updateError": "ไม่สามารถอัปเดตโปรไฟล์ได้",
+    "name": "ชื่อ",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "phone": "โทรศัพท์",
+    "timezone": "โซนเวลา",
+    "language": "ภาษาที่ต้องการ"
+  },
+  "validation": {
+    "required": "จำเป็นต้องกรอก",
+    "invalidEmail": "กรุณากรอกอีเมลให้ถูกต้อง",
+    "minLength": "ต้องมีอย่างน้อย {{count}} อักขระ",
+    "maxLength": "ต้องมีไม่เกิน {{count}} อักขระ",
+    "passwordsMustMatch": "รหัสผ่านต้องตรงกัน"
+  },
+  "dashboard": {
+    "welcome": "ยินดีต้อนรับ, {{name}}",
+    "overview": "ภาพรวม",
+    "users": "ผู้ใช้",
+    "settings": "การตั้งค่า"
+  },
+  "navigation": {
+    "brand": "SRC Thailand",
+    "home": "หน้าแรก",
+    "products": "ผลิตภัณฑ์",
+    "templates": "เทมเพลต",
+    "designer": "AI Designer",
+    "orderPricing": "สั่งพิมพ์ & ราคา",
+    "contact": "ติดต่อเรา",
+    "login": "เข้าสู่ระบบ",
+    "th": "TH",
+    "en": "EN"
+  },
+  "hero": {
+    "aiPowered": "ขับเคลื่อนด้วย AI",
+    "newFeature": "ฟีเจอร์ใหม่",
+    "titlePrefix": "สร้างงานพิมพ์ด้วย",
+    "titleEmphasis": "AI Designer",
+    "subtitle": "แพลตฟอร์มออนไลน์ที่ช่วยให้คุณออกแบบและสั่งพิมพ์ได้ง่ายดาย ด้วยเทคโนโลยี AI ที่ช่วยสร้างดีไซน์อัตโนมัติ",
+    "startWithAI": "เริ่มออกแบบด้วย AI",
+    "watchDemo": "ดูตัวอย่างการใช้งาน",
+    "canvas": "ผ้าใบออกแบบด้วย AI",
+    "poweredBy": "ขับเคลื่อนโดย GPT-4",
+    "featureGenerate": "AI สร้างดีไซน์",
+    "featureFromText": "จากข้อความ",
+    "featureBgRemoval": "ตัดพื้นหลัง",
+    "featureAuto": "อัตโนมัติ",
+    "featureColorSuggest": "แนะนำสี",
+    "featureSmart": "อัจฉริยะ",
+    "statsCustomers": "ลูกค้าที่ไว้วางใจ",
+    "statsOrders": "งานพิมพ์ที่ส่งมอบ",
+    "statsAverageTime": "เวลาส่งมอบเฉลี่ย",
+    "statsSatisfaction": "ลูกค้าพึงพอใจ"
+  },
+  "settings": {
+    "title": "การตั้งค่า",
+    "security": "ความปลอดภัย",
+    "sessionTimeout": "หมดเวลาเซสชัน",
+    "mfa": "การยืนยันตัวตนหลายขั้นตอน",
+    "language": "ภาษา",
+    "theme": "ธีม",
+    "light": "สว่าง",
+    "dark": "มืด",
+    "system": "ระบบ"
+  },
+  "errors": {
+    "network": "เครือข่ายมีปัญหา กรุณาตรวจสอบการเชื่อมต่อ",
+    "unauthorized": "คุณไม่มีสิทธิ์ในการดำเนินการนี้",
+    "notFound": "ไม่พบข้อมูลที่ร้องขอ",
+    "unknown": "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ"
+  }
+  ,
+  "categories": {
+    "title": "ผลิตภัณฑ์ยอดนิยม",
+    "subtitle": "เลือกจากผลิตภัณฑ์หลากหลายประเภท พร้อมคำนวณราคาแบบเรียลไทม์",
+    "businessCards": {
+      "name": "นามบัตร",
+      "desc": "นามบัตรคุณภาพสูง พิมพ์บนกระดาษเคลือบ",
+      "startFrom": "เริ่มต้น",
+      "designWithAI": "ออกแบบด้วย AI",
+      "orderNow": "สั่งด่วน"
+    },
+    "flyers": {
+      "name": "แผ่นพับ",
+      "desc": "แผ่นพับโฆษณา พิมพ์สีสันสดใส"
+    },
+    "posters": {
+      "name": "โปสเตอร์",
+      "desc": "โปสเตอร์ขนาดใหญ่ คุณภาพระดับมืออาชีพ"
+    },
+    "banners": {
+      "name": "แบนเนอร์",
+      "desc": "แบนเนอร์โฆษณา ทนทาน กันน้ำ"
+    }
+  },
+  "pricing": {
+    "realtime": "คำนวณราคาแบบเรียลไทม์",
+    "chooseOptions": "เลือกออปชั่นและดูราคาที่อัปเดตทันที",
+    "productType": "ประเภทผลิตภัณฑ์",
+    "productPlaceholder": "เลือกผลิตภัณฑ์",
+    "quantity": "จำนวน",
+    "pieces": "{{qty}} ชิ้น",
+    "paperType": "ประเภทกระดาษ",
+    "paperNote": "+฿50",
+    "extras": "ตัวเลือกเพิ่มเติม",
+    "summary": "สรุปราคา",
+    "summaryLine": "{{name}} ({{quantity}} ชิ้น)",
+    "basePrice": "฿{{price}}",
+    "paperLabel": "กระดาษ Art Card 310g",
+    "paperPrice": "฿0",
+    "extrasLabel": "ตัวเลือกเพิ่มเติม",
+    "shipping": "ค่าจัดส่ง",
+    "shippingFree": "ฟรี",
+    "total": "รวมทั้งหมด",
+    "addToCart": "เพิ่มลงตะกร้า",
+    "freeShipBanner": "ส่งฟรีทั่วไทย สำหรับคำสั่งซื้อตั้งแต่ ฿1,000"
+  },
+  "paymentMethods": {
+    "promptpay": {
+      "name": "พร้อมเพย์",
+      "description": "สแกน QR Code เพื่อชำระเงิน"
+    },
+    "creditCard": {
+      "name": "บัตรเครดิต",
+      "description": "ชำระด้วย Visa, Mastercard ฯลฯ"
+    }
+  },
+  "cta": {
+    "title": "พร้อมเริ่มต้นสร้างงานพิมพ์ที่สวยงาม?",
+    "subtitle": "ลองใช้เครื่องมือ AI ของเราฟรี ไม่ต้องสมัครสมาชิก ไม่ต้องผูกบัตรเครดิต",
+    "tryAI": "ลองใช้ AI Designer ฟรี",
+    "contactSales": "ติดต่อทีมขาย"
+  },
+  "reviews": {
+    "heading": "ลูกค้าพูดถึงเรา",
+    "subheading": "มากกว่า 10,000+ ลูกค้าไว้วางใจให้เราดูแลงานพิมพ์",
+    "stats": {
+      "customers": "ลูกค้าที่ไว้วางใจ",
+      "orders": "งานพิมพ์ที่ส่งมอบ",
+      "delivery": "เวลาส่งมอบเฉลี่ย",
+      "satisfaction": "ลูกค้าพึงพอใจ"
+    }
+  },
+  "footer": {
+    "platform": "แพลตฟอร์มงานพิมพ์ออนไลน์ที่ใช้เทคโนโลยี AI ช่วยให้การออกแบบง่ายและรวดเร็วขึ้น",
+    "products": "ผลิตภัณฑ์",
+    "services": "บริการ",
+    "contact": "ติดต่อเรา",
+    "address": "123/45 ถ.สุขุมวิท\nกรุงเทพฯ 10110",
+    "links": {
+      "businessCards": "นามบัตร",
+      "flyers": "แผ่นพับ",
+      "posters": "โปสเตอร์",
+      "banners": "แบนเนอร์",
+      "stickers": "ป้ายสติ๊กเกอร์",
+      "packaging": "บรรจุภัณฑ์",
+      "bgRemoval": "ตัดพื้นหลังอัตโนมัติ",
+      "templates": "เทมเพลตฟรี",
+      "customDesign": "ออกแบบตามใจ",
+      "express": "จัดส่งด่วน",
+      "installation": "ติดตั้งป้าย",
+      "privacy": "นโยบายความเป็นส่วนตัว",
+      "terms": "เงื่อนไขการใช้งาน",
+      "faq": "คำถามที่พบบ่อย",
+      "help": "ศูนย์ช่วยเหลือ",
+      "shippingFeature": "ส่งฟรีเมื่อสั่งซื้อเกิน ฿1,000"
+    }
+  },
+  "designEditor": {
+    "advancedTools": "เครื่องมือออกแบบขั้นสูง",
+    "dragDrop": "ออกแบบแบบ Drag & Drop พร้อมเครื่องมือ AI ช่วยให้การออกแบบง่ายและรวดเร็วยิ่งขึ้น",
+    "save": "บันทึก",
+    "aiTips": "แนะนำจาก AI",
+    "aiTipText": "ลองใช้สีน้าเงินเข้มแทนสีฟ้า เพื่อให้ดูเป็นทางการมากขึ้น",
+    "applyTip": "ใช้คำแนะนำนี้"
+  },
+  "aiFeatures": {
+    "title": "เทคโนโลยี AI ที่ช่วยให้การออกแบบง่ายขึ้น",
+    "subtitle": "ด้วยปัญญาประดิษฐ์ขั้นสูง เราช่วยให้คุณสร้างดีไซน์ระดับมืออาชีพได้ภายในไม่กี่นาที",
+    "prompt": {
+      "description": "แค่พิมพ์ข้อความบรรยายสิ่งที่คุณต้องการ AI จะสร้างดีไซน์ให้คุณทันที พร้อมเลือกสีและฟอนต์ที่เหมาะสม"
+    },
+    "bgRemoval": {
+      "title": "ตัดพื้นหลังอัตโนมัติ",
+      "description": "อัปโลดรูปภาพแล้ว AI จะตัดพื้นหลังให้อัตโนมัติ ได้ผลลัพธ์ที่แม่นยำและสะอาด ประหยัดเวลาการแต่งรูป"
+    },
+    "colorSuggest": {
+      "title": "แนะนำสีอัจฉริยะ",
+      "description": "AI วิเคราะห์เนื้อหาและแบรนด์ของคุณ แล้วแนะนำชุดสีที่เหมาะสมที่สุด เพื่อให้ดีไซน์ดูโดดเด่นและมีอัตลักษณ์"
+    },
+    "try": "ลองใช้งาน"
+  },
+  "cart": {
+    "quantityPrice": "จำนวน: {{quantity}} | ราคา: ฿{{price}}",
+    "lineTotal": "฿{{price}}",
+    "subtotal": "฿{{subtotal}}",
+    "shipping": "{{shipping}}",
+    "shippingFree": "ฟรี",
+    "total": "฿{{total}}",
+    "freeShipUpsell": "เพิ่มอีก ฿{{amount}} เพื่อรับสิทธิ์ส่งฟรี!"
+  }
+}
+

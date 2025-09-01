@@ -1,0 +1,384 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  firstName         String
+  lastName          String
+  profileImageUrl   String?
+  phone             String?
+  role              UserRole @default(CUSTOMER)
+  isActive          Boolean  @default(true)
+  permissions       Json?
+  password          String
+
+  // Vendor specific fields
+  shopName          String?  @unique
+  shopDescription   String?
+  shopBanner        String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  products          Product[]
+  designProjects    UserDesignProject[]
+  cartItems         CartItem[]
+  orders            Order[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  nameEn      String
+  nameTh      String
+  slug        String   @unique
+  description String?
+  image       String?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products    Product[]
+  templates   DesignTemplate[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id                  String   @id @default(cuid())
+  categoryId          String
+  vendorId            String
+  nameEn              String
+  nameTh              String
+  slug                String   @unique
+  description         String?
+  basePrice           Decimal  @db.Decimal(10, 2)
+  image               String?
+  specifications      Json?
+  isActive            Boolean  @default(true)
+  availableOptionTypes String[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  category            ProductCategory @relation(fields: [categoryId], references: [id])
+  vendor              User            @relation(fields: [vendorId], references: [id])
+  options             ProductOption[]
+  sizes               ProductSize[]
+  paperTypes          PaperType[]
+  printingSides       PrintingSide[]
+  finishingOptions    FinishingOption[]
+  pricings            ProductPricing[]
+  designProjects      UserDesignProject[]
+  cartItems           CartItem[]
+  orderItems          OrderItem[]
+
+  @@map("products")
+}
+
+model ProductOption {
+  id                    String      @id @default(cuid())
+  productId             String
+  type                  String      // "quantity", "paper", "finish", "size"
+  nameEn                String
+  nameTh                String
+  defaultPriceModifier  Decimal     @db.Decimal(10, 2) @default(0)
+  priceRules            Json?
+  isDefault             Boolean     @default(false)
+
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  product               Product     @relation(fields: [productId], references: [id])
+
+  @@map("product_options")
+}
+
+model DesignTemplate {
+  id          String   @id @default(cuid())
+  categoryId  String
+  name        String
+  description String?
+  thumbnail   String?
+  templateData Json
+  tags        String[]
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
+  designProjects UserDesignProject[]
+
+  @@map("design_templates")
+}
+
+model UserDesignProject {
+  id            String   @id @default(cuid())
+  userId        String
+  productId     String
+  templateId    String?
+  name          String
+  designData    Json
+  previewImage  String?
+  isCompleted   Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User         @relation(fields: [userId], references: [id])
+  product       Product      @relation(fields: [productId], references: [id])
+  template      DesignTemplate? @relation(fields: [templateId], references: [id])
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+
+  @@map("user_design_projects")
+}
+
+model CartItem {
+  id                  String   @id @default(cuid())
+  userId              String
+  productId           String
+  designProjectId     String?
+  quantity            Int
+  selectedOptions     Json
+  unitPrice           String
+  totalPrice          String
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  user                User               @relation(fields: [userId], references: [id])
+  product             Product            @relation(fields: [productId], references: [id])
+  designProject       UserDesignProject? @relation(fields: [designProjectId], references: [id])
+
+  @@map("cart_items")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  shippingCost    Decimal     @db.Decimal(10, 2) @default(0)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  paymentMethod   String?
+  paymentStatus   String      @default("pending")
+  shippingAddress Json?
+  trackingNumber  String?
+  notes           String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String   @id @default(cuid())
+  orderId           String
+  productId         String
+  designProjectId   String?
+  quantity          Int
+  selectedOptions   Json
+  unitPrice         String
+  totalPrice        String
+  designData        Json?
+  printFiles        String[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  order             Order              @relation(fields: [orderId], references: [id])
+  product           Product            @relation(fields: [productId], references: [id])
+  designProject     UserDesignProject? @relation(fields: [designProjectId], references: [id])
+
+  @@map("order_items")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String?
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+enum UserRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  RECEIVED
+  IN_PRODUCTION
+  PRINTED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model ProductSize {
+  id          String   @id @default(cuid())
+  productId   String
+  sizeId      String   // "4x6", "5x7", "6x8"
+  name        String   // "4 x 6 inch"
+  dimensions  String   // "10.2 x 15.2 cm"
+  isPopular   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@map("product_sizes")
+}
+
+model PaperType {
+  id             String   @id @default(cuid())
+  productId      String
+  typeId         String   // "260g-glossy", "300g-glossy", etc.
+  name           String   // "260g Art Card Glossy"
+  weight         String   // "260gsm"
+  description    String
+  priceModifier  Decimal  @db.Decimal(10, 2) @default(0)
+  isPopular      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@map("paper_types")
+}
+
+model PrintingSide {
+  id             String   @id @default(cuid())
+  productId      String
+  sideId         String   // "front-only", "front-back"
+  name           String   // "Full Color on Front Only"
+  description    String
+  priceModifier  Decimal  @db.Decimal(10, 2) @default(0)
+  isPopular      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@map("printing_sides")
+}
+
+model FinishingOption {
+  id             String   @id @default(cuid())
+  productId      String
+  finishId       String   // "none", "matte-front", "glossy-both"
+  name           String   // "Lamination Matte on Front Only"
+  description    String
+  priceModifier  Decimal  @db.Decimal(10, 2) @default(0)
+  isPopular      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@map("finishing_options")
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  locationId  String   @unique // "bangkok", "pattaya", etc.
+  name        String   // "Bangkok, Thailand"
+  address     String   // "Bangkok 10400"
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  pricings    ProductPricing[]
+
+  @@map("locations")
+}
+
+model ProductPricing {
+  id               String   @id @default(cuid())
+  productId        String
+  locationId       String
+  quantity         Int
+  basePrice        Decimal  @db.Decimal(10, 2)
+  discountedPrice  Decimal  @db.Decimal(10, 2)
+  savings          Decimal  @db.Decimal(10, 2) @default(0)
+  isActive         Boolean  @default(true)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  product          Product  @relation(fields: [productId], references: [id])
+  location         Location @relation(fields: [locationId], references: [id])
+
+  @@unique([productId, locationId, quantity])
+  @@map("product_pricing")
+}
+
+model Template {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  category        String   // business-cards, flyers, posters, brochures
+  tags            String[] // modern, minimalist, corporate, sale
+  thumbnailUrl    String?
+  templateData    Json     // Full Fabric.js canvas data
+  baseProductId   String?  // Links to product SKU
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("templates")
+}

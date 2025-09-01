@@ -1,0 +1,246 @@
+{
+  "app": {
+    "name": "CognitoSphere",
+    "tagline": "Secure identity, simplified",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "submit": "Submit",
+    "search": "Search",
+    "language": "Language",
+    "english": "English",
+    "thai": "Thai"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signUp": "Sign up",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "rememberMe": "Remember me",
+    "or": "or",
+    "continueWith": "Continue with {{provider}}",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "verificationCode": "Verification code",
+    "sendCode": "Send code",
+    "resendCode": "Resend code",
+    "codeSent": "We've sent a code to {{destination}}"
+  },
+  "profile": {
+    "title": "Profile",
+    "personalInfo": "Personal information",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Couldn't update profile",
+    "name": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "timezone": "Time zone",
+    "language": "Preferred language"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Enter a valid email address",
+    "minLength": "Must be at least {{count}} characters",
+    "maxLength": "Must be at most {{count}} characters",
+    "passwordsMustMatch": "Passwords must match"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "overview": "Overview",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "navigation": {
+    "brand": "SRC Thailand",
+    "home": "Home",
+    "products": "Products",
+    "templates": "Templates",
+    "designer": "AI Designer",
+    "orderPricing": "Order & Pricing",
+    "contact": "Contact",
+    "login": "Sign In",
+    "th": "TH",
+    "en": "EN"
+  },
+  "hero": {
+    "aiPowered": "AI-Powered",
+    "newFeature": "New Feature",
+    "titlePrefix": "Create prints with",
+    "titleEmphasis": "AI Designer",
+    "subtitle": "An online platform that helps you design and order prints with ease, powered by AI that generates designs automatically",
+    "startWithAI": "Start designing with AI",
+    "watchDemo": "Watch demo",
+    "canvas": "AI Design Canvas",
+    "poweredBy": "Powered by GPT-4",
+    "featureGenerate": "AI Generates Designs",
+    "featureFromText": "from text",
+    "featureBgRemoval": "Background removal",
+    "featureAuto": "automatic",
+    "featureColorSuggest": "Color suggestions",
+    "featureSmart": "smart",
+    "statsCustomers": "Trusted customers",
+    "statsOrders": "Orders delivered",
+    "statsAverageTime": "Average delivery time",
+    "statsSatisfaction": "Customer satisfaction"
+  },
+  "settings": {
+    "title": "Settings",
+    "security": "Security",
+    "sessionTimeout": "Session timeout",
+    "mfa": "Multi‑factor authentication",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "errors": {
+    "network": "Network error. Check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "unknown": "An unknown error occurred."
+  }
+  ,
+  "categories": {
+    "title": "Popular products",
+    "subtitle": "Choose from many product types with real-time pricing",
+    "businessCards": {
+      "name": "Business Cards",
+      "desc": "High-quality cards printed on coated paper",
+      "startFrom": "Starting from",
+      "designWithAI": "Design with AI",
+      "orderNow": "Order now"
+    },
+    "flyers": {
+      "name": "Flyers",
+      "desc": "Promotional flyers with vibrant colors"
+    },
+    "posters": {
+      "name": "Posters",
+      "desc": "Large posters with professional quality"
+    },
+    "banners": {
+      "name": "Banners",
+      "desc": "Durable, water-resistant advertising banners"
+    }
+  },
+  "pricing": {
+    "realtime": "Real-time price calculation",
+    "chooseOptions": "Choose options and see live prices",
+    "productType": "Product type",
+    "productPlaceholder": "Select product",
+    "quantity": "Quantity",
+    "pieces": "{{qty}} pcs",
+    "paperType": "Paper type",
+    "paperNote": "+฿50",
+    "extras": "Additional options",
+    "summary": "Price summary",
+    "summaryLine": "{{name}} ({{quantity}} pcs)",
+    "basePrice": "฿{{price}}",
+    "paperLabel": "Paper Type",
+    "paperPrice": "฿0",
+    "extrasLabel": "Additional options",
+    "shipping": "Shipping",
+    "shippingFree": "Free",
+    "total": "Total",
+    "addToCart": "Add to cart",
+    "freeShipBanner": "Free shipping in Thailand for orders from ฿1,000"
+  },
+  "paymentMethods": {
+    "promptpay": {
+      "name": "PromptPay",
+      "description": "Scan QR code to pay"
+    },
+    "creditCard": {
+      "name": "Credit Card",
+      "description": "Pay with Visa, Mastercard, etc."
+    }
+  },
+  "cta": {
+    "title": "Ready to create beautiful prints?",
+    "subtitle": "Try our AI tools for free. No signup, no credit card.",
+    "tryAI": "Try AI Designer for free",
+    "contactSales": "Contact sales"
+  },
+  "reviews": {
+    "heading": "What customers say",
+    "subheading": "Over 10,000+ customers trust us",
+    "stats": {
+      "customers": "Trusted customers",
+      "orders": "Orders delivered",
+      "delivery": "Average delivery time",
+      "satisfaction": "Customer satisfaction"
+    }
+  },
+  "footer": {
+    "platform": "An online printing platform powered by AI for easier, faster design",
+    "products": "Products",
+    "services": "Services",
+    "contact": "Contact us",
+    "address": "123/45 Sukhumvit Rd\nBangkok 10110",
+    "links": {
+      "businessCards": "Business Cards",
+      "flyers": "Flyers",
+      "posters": "Posters",
+      "banners": "Banners",
+      "stickers": "Sticker Signs",
+      "packaging": "Packaging",
+      "bgRemoval": "Automatic background removal",
+      "templates": "Free templates",
+      "customDesign": "Custom design",
+      "express": "Express delivery",
+      "installation": "Sign installation",
+      "privacy": "Privacy policy",
+      "terms": "Terms of use",
+      "faq": "FAQ",
+      "help": "Help center",
+      "shippingFeature": "Free Shipping Over ฿1,000"
+    }
+  },
+  "designEditor": {
+    "advancedTools": "Advanced design tools",
+    "dragDrop": "Drag & Drop design with AI tools for faster design",
+    "save": "Save",
+    "aiTips": "AI suggestions",
+    "aiTipText": "Try dark blue instead of light blue for a more professional look",
+    "applyTip": "Apply this suggestion"
+  },
+  "aiFeatures": {
+    "title": "AI technology that makes designing easier",
+    "subtitle": "With advanced AI, create professional designs in minutes",
+    "prompt": {
+      "description": "Type what you want and AI instantly creates designs with suitable colors and fonts"
+    },
+    "bgRemoval": {
+      "title": "Automatic background removal",
+      "description": "Upload an image and AI removes the background precisely and cleanly, saving editing time"
+    },
+    "colorSuggest": {
+      "title": "Smart color suggestions",
+      "description": "AI analyzes your content and brand, then recommends the best color sets to make designs stand out"
+    },
+    "try": "Try it"
+  },
+  "cart": {
+    "quantityPrice": "Quantity: {{quantity}} | Price: ฿{{price}}",
+    "lineTotal": "฿{{price}}",
+    "subtotal": "฿{{subtotal}}",
+    "shipping": "{{shipping}}",
+    "shippingFree": "Free",
+    "total": "฿{{total}}",
+    "freeShipUpsell": "Add ฿{{amount}} more for free shipping!"
+  }
+}
+

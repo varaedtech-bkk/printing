@@ -1,0 +1,2238 @@
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Link, useSearch } from "wouter";
+import Navigation from "@/components/navigation";
+import EditorStage from "@/components/designer/EditorStage";
+import { PropertiesPanel } from "@/components/designer/PropertiesPanel";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
+import { useCart } from "@/hooks/use-cart";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Sparkles,
+  Palette,
+  Menu,
+  X,
+  Plus,
+  Save,
+  Share2,
+  Target,
+  Grid3X3,
+  CheckCircle,
+  Lightbulb,
+  Square,
+  Circle,
+  Triangle,
+  Type,
+  Image,
+  Trash2,
+  Copy,
+  Undo,
+  Redo,
+  ShoppingCart,
+  Settings,
+  Layers,
+  Eye,
+  EyeOff,
+  Upload,
+  Palette as PaletteIcon,
+  Wand2,
+  Brain,
+  Zap,
+  Star,
+  Heart,
+  Clock,
+  Users,
+  TrendingUp,
+} from "lucide-react";
+
+// Mock template data with enhanced backgrounds and content
+const MOCK_TEMPLATES = [
+  {
+    id: "template-1",
+    name: "Modern Business Card",
+    category: "business-cards",
+    background: "#ffffff",
+    accentColor: "#3b82f6",
+    thumbnail:
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzNiODJmNiIvPjx0ZXh0IHg9IjEwIiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjMDAwIj5Nb2Rlcm4gQnVzaW5lc3M8L3RleHQ+PHRleHQgeD0iMTAiIHk9IjUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM2NjYiPkNhcmQgRGVzaWduPC90ZXh0Pjwvc3ZnPg==",
+    rating: 4.8,
+    downloads: 1250,
+    tags: ["modern", "professional", "clean"],
+    elements: [
+      { type: "rect", x: 0, y: 0, width: 90, height: 10, fill: "#3b82f6" },
+      {
+        type: "text",
+        x: 10,
+        y: 25,
+        text: "JOHN DOE",
+        fontSize: 16,
+        fontFamily: "Arial",
+        fill: "#000000",
+      },
+      {
+        type: "text",
+        x: 10,
+        y: 40,
+        text: "CEO & Founder",
+        fontSize: 12,
+        fontFamily: "Arial",
+        fill: "#666666",
+      },
+      {
+        type: "text",
+        x: 10,
+        y: 50,
+        text: "john@company.com",
+        fontSize: 10,
+        fontFamily: "Arial",
+        fill: "#666666",
+      },
+    ],
+  },
+  {
+    id: "template-2",
+    name: "Vintage Postcard",
+    category: "postcards",
+    background: "#fef3c7",
+    accentColor: "#8b5a3a",
+    thumbnail:
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmM2M3Ii8+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzhiNWEzYSIvPjx0ZXh0IHg9IjEwIiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOGI1YTNhIj5WaW50YWdlPC90ZXh0Pjx0ZXh0IHg9IjEwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOGI1YTNhIj5Qb3N0Y2FyZDwvdGV4dD48L3N2Zz4=",
+    rating: 4.7,
+    downloads: 980,
+    tags: ["vintage", "retro", "nostalgic"],
+    elements: [
+      { type: "rect", x: 0, y: 0, width: 148, height: 15, fill: "#8b5a3a" },
+      {
+        type: "text",
+        x: 20,
+        y: 40,
+        text: "Greetings from",
+        fontSize: 18,
+        fontFamily: "Georgia",
+        fill: "#8b5a3a",
+      },
+      {
+        type: "text",
+        x: 20,
+        y: 70,
+        text: "Beautiful Destination",
+        fontSize: 24,
+        fontFamily: "Georgia",
+        fill: "#8b5a3a",
+      },
+    ],
+  },
+  {
+    id: "template-3",
+    name: "Creative Flyer",
+    category: "flyers",
+    background: "#fef2f2",
+    accentColor: "#ef4444",
+    thumbnail:
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmMmYyIi8+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2VmNDQ0NCIvPjx0ZXh0IHg9IjEwIiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZWY0NDQ0Ij5DcmVhdGl2ZTwvdGV4dD48dGV4dCB4PSIxMCIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2VmNDQ0NCI+Rmx5ZXIgRGVzaWduPC90ZXh0Pjwvc3ZnPg==",
+    rating: 4.6,
+    downloads: 890,
+    tags: ["creative", "colorful", "eye-catching"],
+    elements: [
+      { type: "rect", x: 0, y: 0, width: 148, height: 20, fill: "#ef4444" },
+      {
+        type: "text",
+        x: 30,
+        y: 60,
+        text: "SPECIAL EVENT",
+        fontSize: 28,
+        fontFamily: "Arial",
+        fill: "#ef4444",
+      },
+      {
+        type: "text",
+        x: 30,
+        y: 100,
+        text: "Join us for an amazing experience",
+        fontSize: 16,
+        fontFamily: "Arial",
+        fill: "#374151",
+      },
+      {
+        type: "text",
+        x: 30,
+        y: 140,
+        text: "Date: December 15, 2024",
+        fontSize: 14,
+        fontFamily: "Arial",
+        fill: "#6b7280",
+      },
+    ],
+  },
+  {
+    id: "template-4",
+    name: "Elegant Poster",
+    category: "posters",
+    background: "#1f2937",
+    accentColor: "#fbbf24",
+    thumbnail:
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWYyOTM3Ii8+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZiYmYyNCIvPjx0ZXh0IHg9IjEwIiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmJmYjI0Ij5FbGVnYW50PC90ZXh0Pjx0ZXh0IHg9IjEwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjZmJmYjI0Ij5Qb3N0ZXIgRGVzaWduPC90ZXh0Pjwvc3ZnPg==",
+    rating: 4.9,
+    downloads: 2100,
+    tags: ["elegant", "minimal", "sophisticated"],
+    elements: [
+      { type: "rect", x: 0, y: 0, width: 297, height: 30, fill: "#fbbf24" },
+      {
+        type: "text",
+        x: 50,
+        y: 100,
+        text: "EXHIBITION",
+        fontSize: 48,
+        fontFamily: "Georgia",
+        fill: "#fbbf24",
+      },
+      {
+        type: "text",
+        x: 50,
+        y: 200,
+        text: "Contemporary Art Gallery",
+        fontSize: 24,
+        fontFamily: "Georgia",
+        fill: "#ffffff",
+      },
+      {
+        type: "text",
+        x: 50,
+        y: 300,
+        text: "Opening Night: January 20, 2025",
+        fontSize: 18,
+        fontFamily: "Georgia",
+        fill: "#d1d5db",
+      },
+    ],
+  },
+];
+
+// Mock AI suggestions
+const MOCK_AI_SUGGESTIONS = [
+  {
+    id: "ai-1",
+    type: "color-palette",
+    title: "Modern Color Palette",
+    description: "Professional blues and grays",
+    colors: ["#1e40af", "#3b82f6", "#64748b", "#94a3b8", "#e2e8f0"],
+  },
+  {
+    id: "ai-2",
+    type: "layout",
+    title: "Grid Layout",
+    description: "Clean 3-column grid system",
+    preview: "grid-layout-preview",
+  },
+  {
+    id: "ai-3",
+    type: "typography",
+    title: "Typography Pairing",
+    description: "Inter + Playfair Display",
+    fonts: ["Inter", "Playfair Display"],
+  },
+];
+
+// Mock product data
+const MOCK_PRODUCTS = [
+  {
+    id: "business-card",
+    nameEn: "Business Card",
+    category: "business-cards",
+    dimensions: { width: 90, height: 54 },
+    description: "Standard business card size",
+    priceRange: "฿50-200",
+    useCases: ["Corporate branding", "Personal networking"],
+    basePrice: 100,
+  },
+  {
+    id: "postcard",
+    nameEn: "Postcard",
+    category: "postcards",
+    dimensions: { width: 148, height: 105 },
+    description: "Standard postcard size",
+    priceRange: "฿100-300",
+    useCases: ["Marketing campaigns", "Event invitations"],
+    basePrice: 150,
+  },
+  {
+    id: "flyer-a5",
+    nameEn: "A5 Flyer",
+    category: "flyers",
+    dimensions: { width: 148, height: 210 },
+    description: "Compact A5 size for flyers",
+    priceRange: "฿150-500",
+    useCases: ["Event promotion", "Product catalogs"],
+    basePrice: 200,
+  },
+  {
+    id: "flyer-a4",
+    nameEn: "A4 Flyer",
+    category: "flyers",
+    dimensions: { width: 210, height: 297 },
+    description: "Standard A4 size for detailed information",
+    priceRange: "฿200-800",
+    useCases: ["Event promotion", "Product catalogs"],
+    basePrice: 300,
+  },
+  {
+    id: "poster-a3",
+    nameEn: "A3 Poster",
+    category: "posters",
+    dimensions: { width: 297, height: 420 },
+    description: "Large format for impactful displays",
+    priceRange: "฿500-1500",
+    useCases: ["Event advertising", "Brand promotion"],
+    basePrice: 800,
+  },
+];
+
+export default function KonvaDemo() {
+  const { toast } = useToast();
+  const { userId } = useAuth();
+  const { cartCount } = useCart();
+  const searchParams = useSearch();
+
+  // Core state
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [selectedTool, setSelectedTool] = useState("select");
+  const [zoom, setZoom] = useState(1);
+  const [showGuides, setShowGuides] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const [editorState, setEditorState] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("design");
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [showAITools, setShowAITools] = useState(false);
+  const [designName, setDesignName] = useState("Untitled Design");
+  const [showCartDialog, setShowCartDialog] = useState(false);
+  const [cartQuantity, setCartQuantity] = useState(1);
+  const [cartOptions, setCartOptions] = useState<any>({});
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [canvasDimensions, setCanvasDimensions] = useState({
+    width: 400,
+    height: 300,
+  });
+
+  const editorRef = useRef<any>(null);
+
+  // Parse URL parameters for template loading
+  const urlParams = new URLSearchParams(searchParams);
+  const templateId = urlParams.get("template");
+  const productId = urlParams.get("product");
+
+  // Fetch template data if templateId is present
+  const { data: templateData } = useQuery({
+    queryKey: ["template", templateId],
+    queryFn: async () => {
+      if (!templateId) return null;
+      const response = await fetch(`/api/templates/${templateId}`);
+      if (!response.ok) throw new Error("Failed to fetch template");
+      return response.json();
+    },
+    enabled: !!templateId,
+  });
+
+  // Fetch product data if productId is present
+  const { data: productData } = useQuery({
+    queryKey: ["product", productId],
+    queryFn: async () => {
+      if (!productId) return null;
+      const response = await fetch(`/api/products/${productId}`);
+      if (!response.ok) throw new Error("Failed to fetch product");
+      return response.json();
+    },
+    enabled: !!productId,
+  });
+
+  // Handle template loading from URL parameters
+  useEffect(() => {
+    if (templateData && editorRef.current && !selectedProduct) {
+      // Load the template into the canvas
+      loadTemplateFromAPI(templateData);
+    }
+  }, [templateData, selectedProduct]);
+
+  // Parse size string from specifications
+  const parseSizeFromSpecifications = useCallback((specifications: any) => {
+    if (!specifications?.size) return { width: 400, height: 300 };
+
+    const sizeStr = specifications.size;
+
+    // Handle different size formats
+    if (sizeStr.includes("A4")) {
+      return { width: 210, height: 297 }; // A4 in mm
+    } else if (sizeStr.includes("A5")) {
+      return { width: 148, height: 210 }; // A5 in mm
+    } else if (sizeStr.includes("A3")) {
+      return { width: 297, height: 420 }; // A3 in mm
+    } else if (sizeStr.includes("×") || sizeStr.includes("x")) {
+      // Parse formats like "8.5cm x 8.5cm" or "9cm x 5.4cm"
+      const match = sizeStr.match(
+        /(\d+(?:\.\d+)?).*?(?:×|x).*?(\d+(?:\.\d+)?)/i
+      );
+      if (match) {
+        const width = parseFloat(match[1]) * 10; // Convert cm to mm
+        const height = parseFloat(match[2]) * 10; // Convert cm to mm
+        return { width: Math.round(width), height: Math.round(height) };
+      }
+    } else if (sizeStr.includes("diameter") || sizeStr.includes("circle")) {
+      // Handle circular items like stickers
+      const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
+      if (match) {
+        const diameter = parseFloat(match[1]) * 10; // Convert cm to mm
+        return { width: Math.round(diameter), height: Math.round(diameter) };
+      }
+    }
+
+    return { width: 400, height: 300 }; // Default fallback
+  }, []);
+
+  // Handle product loading from URL parameters
+  useEffect(() => {
+    if (productData && !selectedProduct) {
+      setSelectedProduct(productData);
+
+      // Determine canvas dimensions with proper fallbacks
+      let dimensions = { width: 400, height: 300 };
+
+      if (productData.dimensions?.width && productData.dimensions?.height) {
+        // Use dimensions if available
+        dimensions = {
+          width: productData.dimensions.width,
+          height: productData.dimensions.height,
+        };
+      } else if (productData.specifications) {
+        // Parse size from specifications
+        dimensions = parseSizeFromSpecifications(productData.specifications);
+      }
+
+      setCanvasDimensions(dimensions);
+
+      toast({
+        title: "Product Loaded",
+        description: `Loaded ${productData.nameEn} (${dimensions.width}×${dimensions.height}mm)`,
+      });
+    }
+  }, [productData, selectedProduct, parseSizeFromSpecifications, toast]);
+
+  // Function to find matching mock template
+  const findMatchingMockTemplate = useCallback(
+    (templateName: string, categoryId: string) => {
+      console.log(
+        "🎨 Finding mock template for:",
+        templateName,
+        "category:",
+        categoryId
+      );
+
+      // Map database category IDs to mock template categories
+      const categoryIdToMockCategory: { [key: string]: string } = {
+        cmf1ahbz00005uc2shy136py5: "business-cards", // Business Cards
+        cmf1ahbz90006uc2sqdm6o86y: "flyers", // Flyers & Brochures
+        cmf1ahbzc0007uc2s8b4rwzib: "posters", // Banners & Posters
+        cmf1ahbze0008uc2sihufp8ob: "stickers", // Stickers & Labels
+      };
+
+      // Try to find by name match first
+      let mockTemplate = MOCK_TEMPLATES.find(
+        (mock) =>
+          templateName
+            .toLowerCase()
+            .includes(mock.name.toLowerCase().split(" ")[0]) ||
+          mock.name
+            .toLowerCase()
+            .includes(templateName.toLowerCase().split(" ")[0])
+      );
+
+      console.log("🎨 Name match result:", mockTemplate?.name || "none found");
+
+      // If not found, try to find by category
+      if (!mockTemplate) {
+        const mockCategory =
+          categoryIdToMockCategory[categoryId] || "business-cards";
+        console.log("🎨 Looking for category:", mockCategory);
+
+        mockTemplate = MOCK_TEMPLATES.find(
+          (mock) => mock.category === mockCategory
+        );
+        console.log(
+          "🎨 Category match result:",
+          mockTemplate?.name || "none found"
+        );
+      }
+
+      const finalTemplate = mockTemplate || MOCK_TEMPLATES[0];
+      console.log(
+        "🎨 Final template selected:",
+        finalTemplate.name,
+        "with",
+        finalTemplate.elements?.length || 0,
+        "elements"
+      );
+
+      return finalTemplate;
+    },
+    []
+  );
+
+  // Function to load template from API data
+  const loadTemplateFromAPI = useCallback(
+    (template: any) => {
+      console.log("🎨 Starting template load for:", template.name, template);
+
+      if (!editorRef.current) {
+        toast({
+          title: "Error",
+          description: "Editor not ready yet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        // Clear existing canvas first
+        console.log("🎨 Clearing canvas");
+        editorRef.current.clearCanvas();
+
+        // Wait for canvas to clear and ensure proper canvas dimensions
+        setTimeout(() => {
+          if (!editorRef.current) return;
+
+          // Ensure canvas dimensions are properly set for the template
+          const mockTemplate = findMatchingMockTemplate(
+            template.name,
+            template.category
+          );
+          if (
+            mockTemplate &&
+            mockTemplate.elements &&
+            Array.isArray(mockTemplate.elements)
+          ) {
+            try {
+              // Calculate appropriate canvas size based on template elements
+              const maxX = Math.max(
+                ...mockTemplate.elements.map(
+                  (el) => (el.x || 0) + (el.width || 100)
+                )
+              );
+              const maxY = Math.max(
+                ...mockTemplate.elements.map(
+                  (el) => (el.y || 0) + (el.height || 50)
+                )
+              );
+              const canvasWidth = Math.max(maxX + 50, 400); // Minimum 400px
+              const canvasHeight = Math.max(maxY + 50, 300); // Minimum 300px
+
+              console.log(
+                "🎨 Setting canvas size for template:",
+                canvasWidth,
+                "x",
+                canvasHeight
+              );
+              setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
+            } catch (calcError) {
+              console.warn("Error calculating canvas dimensions:", calcError);
+              // Use default dimensions
+              setCanvasDimensions({ width: 400, height: 300 });
+            }
+          } else {
+            console.log("🎨 Using default canvas size");
+            setCanvasDimensions({ width: 400, height: 300 });
+          }
+
+          // Wait for canvas dimensions to update before loading elements
+          setTimeout(() => {
+            if (!editorRef.current) return;
+
+            // Ensure canvas dimensions are reasonable
+            if (canvasDimensions.width < 100 || canvasDimensions.height < 100) {
+              console.warn("🎨 Canvas dimensions too small, using defaults");
+              setCanvasDimensions({ width: 400, height: 300 });
+              return;
+            }
+
+            console.log(
+              "🎨 Starting template element loading with canvas size:",
+              canvasDimensions.width,
+              "x",
+              canvasDimensions.height
+            );
+
+            // Priority 1: Use templateData if available (Konva JSON)
+            if (template.templateData) {
+              console.log(
+                "🎨 Loading template with templateData:",
+                template.templateData
+              );
+              try {
+                editorRef.current.loadState(template.templateData);
+                toast({
+                  title: "Template Loaded",
+                  description: `Loaded ${template.name} template`,
+                });
+              } catch (error) {
+                console.error("Error loading templateData:", error);
+                toast({
+                  title: "Template Load Error",
+                  description:
+                    "Failed to load template data. Please try again.",
+                  variant: "destructive",
+                });
+              }
+              return;
+            }
+
+            // Priority 2: Use elements array if available (legacy format)
+            if (template.elements && Array.isArray(template.elements)) {
+              console.log(
+                "🎨 Loading template with elements:",
+                template.elements
+              );
+              template.elements.forEach((element: any, index: number) => {
+                setTimeout(() => {
+                  try {
+                    console.log("🎨 Loading element:", index, element);
+                    if (element.type === "text") {
+                      const textNode = editorRef.current?.addText?.(
+                        element.x || 50,
+                        element.y || 50
+                      );
+                      if (textNode) {
+                        if (element.text) textNode.text(element.text);
+                        if (element.fontSize)
+                          textNode.fontSize(element.fontSize);
+                        if (element.fontFamily)
+                          textNode.fontFamily(element.fontFamily);
+                        if (element.fill) textNode.fill(element.fill);
+                        console.log(
+                          "🎨 Legacy text element loaded:",
+                          element.text
+                        );
+                      }
+                    } else if (
+                      element.type === "rect" ||
+                      element.type === "rectangle"
+                    ) {
+                      console.log(
+                        "🎨 Adding rectangle at:",
+                        element.x || 50,
+                        element.y || 50
+                      );
+                      const rectNode = editorRef.current?.addShape?.(
+                        "rectangle",
+                        element.x || 50,
+                        element.y || 50
+                      );
+                      if (rectNode && element.fill) {
+                        rectNode.fill(element.fill);
+                      }
+                      console.log("🎨 Legacy rectangle loaded");
+                    }
+                  } catch (elementError) {
+                    console.warn(
+                      "Error loading element:",
+                      element,
+                      elementError
+                    );
+                  }
+                }, index * 200);
+              });
+
+              toast({
+                title: "Template Applied",
+                description: `Applied ${template.name} template`,
+              });
+              return;
+            }
+
+            // Priority 3: Use mock template as fallback
+            console.log(
+              "🎨 Using mock template fallback for:",
+              template.name,
+              "category:",
+              template.category
+            );
+            const mockTemplate = findMatchingMockTemplate(
+              template.name,
+              template.category
+            );
+
+            if (mockTemplate.elements && Array.isArray(mockTemplate.elements)) {
+              console.log(
+                "🎨 Loading mock template elements:",
+                mockTemplate.elements.length,
+                "elements"
+              );
+
+              // Load elements sequentially with proper error handling
+              mockTemplate.elements.forEach((element: any, index: number) => {
+                setTimeout(() => {
+                  try {
+                    console.log("🎨 Loading mock element:", index, element);
+
+                    if (element.type === "text") {
+                      console.log(
+                        "🎨 Creating text element:",
+                        element.text,
+                        "at",
+                        element.x,
+                        element.y
+                      );
+
+                      // Ensure coordinates are within canvas bounds
+                      const canvasWidth = canvasDimensions.width;
+                      const canvasHeight = canvasDimensions.height;
+                      const safeX = Math.max(
+                        10,
+                        Math.min(element.x || 50, canvasWidth - 100)
+                      );
+                      const safeY = Math.max(
+                        10,
+                        Math.min(element.y || 50, canvasHeight - 50)
+                      );
+
+                      console.log(
+                        "🎨 Safe coordinates:",
+                        safeX,
+                        safeY,
+                        "Canvas size:",
+                        canvasWidth,
+                        canvasHeight
+                      );
+
+                      // Create text node with all properties at once
+                      const textNode = editorRef.current?.addText?.(
+                        safeX,
+                        safeY
+                      );
+                      if (textNode) {
+                        // Set text properties safely with additional error checking and delay
+                        setTimeout(() => {
+                          try {
+                            if (
+                              element.text &&
+                              typeof element.text === "string"
+                            ) {
+                              textNode.text(element.text);
+                            }
+                            if (
+                              element.fontSize &&
+                              typeof element.fontSize === "number"
+                            ) {
+                              textNode.fontSize(element.fontSize);
+                            }
+                            if (
+                              element.fontFamily &&
+                              typeof element.fontFamily === "string"
+                            ) {
+                              textNode.fontFamily(element.fontFamily);
+                            }
+                            if (
+                              element.fill &&
+                              typeof element.fill === "string"
+                            ) {
+                              textNode.fill(element.fill);
+                            }
+                            if (
+                              element.width &&
+                              typeof element.width === "number"
+                            ) {
+                              textNode.width(element.width);
+                            }
+                            if (
+                              element.align &&
+                              typeof element.align === "string"
+                            ) {
+                              textNode.align(element.align);
+                            }
+                            if (
+                              element.rotation !== undefined &&
+                              typeof element.rotation === "number"
+                            ) {
+                              textNode.rotation(element.rotation);
+                            }
+                            console.log(
+                              "🎨 Text element created and configured:",
+                              textNode.text()
+                            );
+                          } catch (propError) {
+                            console.warn(
+                              "Could not set text property:",
+                              propError,
+                              "Element:",
+                              element
+                            );
+                          }
+                        }, 50); // Small delay to ensure element is ready
+                      } else {
+                        console.error("🎨 Failed to create text node");
+                      }
+                    } else if (
+                      element.type === "rect" ||
+                      element.type === "rectangle"
+                    ) {
+                      console.log(
+                        "🎨 Creating rectangle at:",
+                        element.x || 50,
+                        element.y || 50,
+                        "size:",
+                        element.width || 100,
+                        element.height || 50
+                      );
+
+                      // Ensure coordinates are within canvas bounds
+                      const canvasWidth = canvasDimensions.width;
+                      const canvasHeight = canvasDimensions.height;
+                      const safeX = Math.max(
+                        0,
+                        Math.min(
+                          element.x || 50,
+                          canvasWidth - (element.width || 100)
+                        )
+                      );
+                      const safeY = Math.max(
+                        0,
+                        Math.min(
+                          element.y || 50,
+                          canvasHeight - (element.height || 50)
+                        )
+                      );
+
+                      console.log(
+                        "🎨 Safe rectangle coordinates:",
+                        safeX,
+                        safeY
+                      );
+
+                      // Create rectangle using EditorStage method
+                      const rectNode = editorRef.current?.addShape?.(
+                        "rectangle",
+                        safeX,
+                        safeY
+                      );
+                      if (rectNode) {
+                                              // Set rectangle properties safely with type checking and delay
+                      setTimeout(() => {
+                        try {
+                          if (
+                            element.width &&
+                            typeof element.width === "number"
+                          ) {
+                            rectNode.width(element.width);
+                          }
+                          if (
+                            element.height &&
+                            typeof element.height === "number"
+                          ) {
+                            rectNode.height(element.height);
+                          }
+                          if (
+                            element.fill &&
+                            typeof element.fill === "string"
+                          ) {
+                            rectNode.fill(element.fill);
+                          }
+                          if (
+                            element.stroke &&
+                            typeof element.stroke === "string"
+                          ) {
+                            rectNode.stroke(element.stroke);
+                          }
+                          if (
+                            element.strokeWidth !== undefined &&
+                            typeof element.strokeWidth === "number"
+                          ) {
+                            rectNode.strokeWidth(element.strokeWidth);
+                          }
+                          if (
+                            element.rotation !== undefined &&
+                            typeof element.rotation === "number"
+                          ) {
+                            rectNode.rotation(element.rotation);
+                          }
+                          console.log(
+                            "🎨 Rectangle created and configured:",
+                            rectNode.width(),
+                            rectNode.height()
+                          );
+                        } catch (propError) {
+                          console.warn(
+                            "Could not set rectangle property:",
+                            propError,
+                            "Element:",
+                            element
+                          );
+                        }
+                      }, 50); // Small delay to ensure element is ready
+                      } else {
+                        console.error("🎨 Failed to create rectangle");
+                      }
+                    }
+                  } catch (elementError) {
+                    console.warn(
+                      "Error loading mock element:",
+                      element,
+                      elementError
+                    );
+                  }
+                }, index * 300); // Increased delay to prevent conflicts
+              });
+
+              // Force a redraw after all elements are loaded
+              setTimeout(() => {
+                if (editorRef.current) {
+                  // Trigger a state update to force canvas redraw
+                  editorRef.current.forceRefreshCanvasState?.();
+                  console.log("🎨 Template loading complete, canvas refreshed");
+                }
+              }, mockTemplate.elements.length * 300 + 100);
+
+              toast({
+                title: "Template Applied",
+                description: `Applied ${template.name} template (using template library)`,
+              });
+            } else {
+              console.log(
+                "🎨 No mock template elements found, using basic fallback"
+              );
+              // Final fallback - just add a simple text element
+              setTimeout(() => {
+                try {
+                  const textNode = editorRef.current?.addText?.(50, 50);
+                  if (textNode) {
+                    textNode.text(`${template.name} Template`);
+                    textNode.fontSize(24);
+                    textNode.fill("#333333");
+                    console.log("🎨 Basic fallback text created");
+                  }
+                } catch (fallbackError) {
+                  console.warn("Error with final fallback:", fallbackError);
+                }
+              }, 100);
+
+              toast({
+                title: "Basic Template Created",
+                description: `Created basic template for ${template.name}`,
+              });
+            }
+          }, 200); // Close the setTimeout that waits for canvas dimensions
+        }, 100); // Close the setTimeout that wraps the template loading
+      } catch (error) {
+        console.error("Error loading template:", error);
+        toast({
+          title: "Template Load Error",
+          description: "Failed to load the template. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, findMatchingMockTemplate, canvasDimensions]
+  );
+
+  // Product selection handler
+  const handleProductSelect = useCallback(
+    (product: any) => {
+      setSelectedProduct(product);
+
+      // Determine canvas dimensions with proper fallbacks
+      let dimensions = { width: 400, height: 300 };
+
+      if (product.dimensions?.width && product.dimensions?.height) {
+        // Use dimensions if available
+        dimensions = {
+          width: product.dimensions.width,
+          height: product.dimensions.height,
+        };
+      } else if (product.specifications) {
+        // Parse size from specifications
+        dimensions = parseSizeFromSpecifications(product.specifications);
+      }
+
+      setCanvasDimensions(dimensions);
+
+      toast({
+        title: "Product Selected",
+        description: `Started designing for ${product.nameEn} (${dimensions.width}×${dimensions.height}mm)`,
+      });
+    },
+    [parseSizeFromSpecifications, toast]
+  );
+
+  // Template selection handler
+  const handleTemplateSelect = useCallback(
+    (template: any) => {
+      if (!editorRef.current) {
+        toast({
+          title: "Error",
+          description: "Editor not ready yet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Clear existing canvas first
+      editorRef.current.clearCanvas();
+
+      // Apply template elements
+      if (template.elements) {
+        template.elements.forEach((element: any, index: number) => {
+          setTimeout(() => {
+            if (element.type === "text") {
+              // Add text element with proper positioning
+              const textNode = editorRef.current.addText(element.x, element.y);
+              if (textNode) {
+                // Set text properties
+                textNode.text(element.text);
+                textNode.fontSize(element.fontSize);
+                textNode.fontFamily(element.fontFamily);
+                textNode.fill(element.fill);
+              }
+            } else if (element.type === "rect") {
+              // Add rectangle element
+              editorRef.current.addShape("rectangle", element.x, element.y);
+            }
+          }, index * 200); // Stagger the additions
+        });
+      }
+
+      toast({
+        title: "Template Applied",
+        description: `Applied ${template.name} template`,
+      });
+      setShowTemplateGallery(false);
+    },
+    [toast]
+  );
+
+  // AI suggestion handler
+  const handleAISuggestion = useCallback(
+    (suggestion: any) => {
+      toast({
+        title: "AI Suggestion Applied",
+        description: `Applied ${suggestion.title}`,
+      });
+    },
+    [toast]
+  );
+
+  // State change handler
+  const handleStateChange = useCallback((state: any) => {
+    setEditorState(state);
+  }, []);
+
+  // Element selection handler
+  const handleElementSelect = useCallback((element: any) => {
+    setSelectedElements(element ? [element] : []);
+  }, []);
+
+  // Tool handlers
+  const handleToolChange = useCallback(
+    (tool: string) => {
+      setSelectedTool(tool);
+      toast({
+        title: "Tool Changed",
+        description: `Switched to ${tool} tool`,
+      });
+    },
+    [toast]
+  );
+
+  const handleAddText = useCallback(() => {
+    if (editorRef.current?.addText) {
+      editorRef.current.addText();
+      toast({
+        title: "Text Added",
+        description: "Text element added to canvas center",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Editor not ready yet",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const handleAddShape = useCallback(
+    (shapeType: string) => {
+      if (editorRef.current?.addShape) {
+        editorRef.current.addShape(shapeType);
+        toast({
+          title: "Shape Added",
+          description: `${shapeType} added to canvas`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Editor not ready yet",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast]
+  );
+
+  const handleAddImage = useCallback(() => {
+    // Create a file input for image upload
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+
+    fileInput.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file && editorRef.current?.addImage) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          editorRef.current.addImage(imageUrl);
+          toast({
+            title: "Image Added",
+            description: "Image uploaded and added to canvas",
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+      // Clean up
+      document.body.removeChild(fileInput);
+    };
+
+    // Trigger file selection
+    document.body.appendChild(fileInput);
+    fileInput.click();
+  }, [toast]);
+
+  const handleUndo = useCallback(() => {
+    if (editorRef.current?.undo) {
+      const success = editorRef.current.undo();
+      if (success) {
+        toast({
+          title: "Undo",
+          description: "Action undone",
+        });
+      } else {
+        toast({
+          title: "No Actions",
+          description: "Nothing to undo",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Editor not ready yet",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const handleRedo = useCallback(() => {
+    if (editorRef.current?.redo) {
+      const success = editorRef.current.redo();
+      if (success) {
+        toast({
+          title: "Redo",
+          description: "Action redone",
+        });
+      } else {
+        toast({
+          title: "No Actions",
+          description: "Nothing to redo",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Editor not ready yet",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const handleSave = useCallback(() => {
+    if (editorRef.current?.saveDesign) {
+      editorRef.current.saveDesign();
+      toast({
+        title: "Design Saved",
+        description: "Your design has been saved",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Editor not ready yet",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const handleExport = useCallback(() => {
+    if (editorRef.current?.exportDesign) {
+      editorRef.current.exportDesign();
+      toast({
+        title: "Export Successful",
+        description: "Design exported successfully",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Editor not ready yet",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const handleAddToCart = useCallback(() => {
+    if (!selectedProduct) {
+      toast({
+        title: "No Product Selected",
+        description: "Please select a product first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Open cart dialog for quantity and options selection
+    setShowCartDialog(true);
+  }, [selectedProduct]);
+
+  const handleConfirmAddToCart = useCallback(async () => {
+    if (!selectedProduct || !userId) return;
+
+    // Get current design state
+    const designData = editorRef.current?.getState
+      ? editorRef.current.getState()
+      : null;
+
+    // Validate that there's content in the design
+    if (!designData || (designData.texts && designData.texts.length === 0)) {
+      toast({
+        title: "Empty Design",
+        description:
+          "Please add some content to your design before adding to cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Calculate total price based on quantity and options
+    let totalPrice = selectedProduct.basePrice * cartQuantity;
+
+    // Add option costs if any
+    Object.values(cartOptions).forEach((option: any) => {
+      if (option.priceModifier) {
+        totalPrice += option.priceModifier * cartQuantity;
+      }
+    });
+
+    try {
+      // Add to cart using API directly
+      await apiRequest("POST", "/api/cart", {
+        userId,
+        productId: selectedProduct.id,
+        designProjectId: null, // This would be set if we had design projects
+        quantity: cartQuantity,
+        selectedOptions: cartOptions || {}, // Ensure it's always an object
+        unitPrice: selectedProduct.basePrice.toString(),
+        totalPrice: totalPrice.toString(),
+      });
+
+      // Invalidate cart queries to refresh the cart
+      queryClient.invalidateQueries({ queryKey: ["/api/cart", userId] });
+
+      toast({
+        title: "Added to Cart",
+        description: `${designName} (${cartQuantity} × ${selectedProduct.nameEn}) added to cart`,
+      });
+
+      setShowCartDialog(false);
+      setCartQuantity(1);
+      setCartOptions({});
+    } catch (error: any) {
+      toast({
+        title: "Failed to add to cart",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [selectedProduct, designName, cartQuantity, cartOptions, userId, toast]);
+
+  const handleGoToCart = useCallback(() => {
+    // Navigate to cart page with the items
+    window.location.href = "/cart";
+  }, []);
+
+  const handleAIAssistant = useCallback(() => {
+    setShowAITools(true);
+    toast({
+      title: "AI Assistant",
+      description: "AI tools panel opened",
+    });
+  }, [toast]);
+
+  const handleGenerateColors = useCallback(() => {
+    toast({
+      title: "Color Palette Generated",
+      description: "New color palette created",
+    });
+  }, [toast]);
+
+  const handleZoomIn = useCallback(() => {
+    if (editorRef.current?.zoomIn) {
+      editorRef.current.zoomIn();
+    }
+    setZoom((prev) => Math.min(prev * 1.2, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    if (editorRef.current?.zoomOut) {
+      editorRef.current.zoomOut();
+    }
+    setZoom((prev) => Math.max(prev / 1.2, 0.1));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    if (editorRef.current?.resetView) {
+      editorRef.current.resetView();
+    }
+    setZoom(1);
+  }, []);
+
+  const handleToggleGuides = useCallback(() => {
+    setShowGuides((prev) => !prev);
+  }, []);
+
+  const handleToggleGrid = useCallback(() => {
+    setShowGrid((prev) => !prev);
+  }, []);
+
+  // PropertiesPanel methods
+  const handleDeleteSelected = useCallback(() => {
+    if (editorRef.current?.deleteSelected) {
+      editorRef.current.deleteSelected();
+      setSelectedElements([]);
+      toast({
+        title: "Element Deleted",
+        description: "Selected element removed from canvas",
+      });
+    }
+  }, [toast]);
+
+  const handleDownloadPreview = useCallback(() => {
+    if (editorRef.current?.exportDesign) {
+      editorRef.current.exportDesign();
+      toast({
+        title: "Preview Downloaded",
+        description: "Design preview exported successfully",
+      });
+    }
+  }, [toast]);
+
+  const handleValidateForPrint = useCallback(() => {
+    // Simple validation - check if there are elements on canvas
+    const elementCount = editorRef.current?.getAllTexts
+      ? editorRef.current.getAllTexts().length
+      : 0;
+    const errors = [];
+
+    if (elementCount === 0) {
+      errors.push("No elements on canvas");
+    }
+
+    if (!selectedProduct) {
+      errors.push("No product selected");
+    }
+
+    return errors;
+  }, [selectedProduct]);
+
+  const handleExportForPrint = useCallback(() => {
+    return {
+      designName,
+      product: selectedProduct,
+      elements: editorRef.current?.getState
+        ? editorRef.current.getState()
+        : null,
+      timestamp: new Date().toISOString(),
+    };
+  }, [designName, selectedProduct]);
+
+  const handleResizeCanvas = useCallback((width: number, height: number) => {
+    setCanvasDimensions({ width, height });
+    // Note: Actual canvas resizing would need to be implemented in EditorStage
+    return true;
+  }, []);
+
+  const handleForceRefreshCanvas = useCallback(() => {
+    if (editorRef.current?.forceRefreshCanvasState) {
+      editorRef.current.forceRefreshCanvasState();
+    }
+  }, []);
+
+  const handleCreateTestObject = useCallback(() => {
+    if (editorRef.current?.addText) {
+      editorRef.current.addText();
+    return true;
+    }
+    return false;
+  }, []);
+
+  // If user is not authenticated, show login prompt
+  if (!userId) {
+    return (
+      <div className="h-screen bg-gray-50 flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <Sparkles className="w-8 h-8 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              AI Designer
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Create stunning designs with our AI-powered design studio. Please
+              log in to access the designer and start creating.
+            </p>
+            <div className="space-y-4">
+              <Link href="/login">
+                <Button className="w-full bg-primary text-white hover:bg-primary-600">
+                  Log In to Start Designing
+                </Button>
+              </Link>
+              <p className="text-sm text-gray-500">
+                Don't have an account?{" "}
+                <Link href="/login" className="text-primary hover:underline">
+                  Sign up here
+                </Link>
+              </p>
+            </div>
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="w-8 h-8 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-2">
+                    <Sparkles className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="text-xs text-gray-600">AI-Powered</span>
+                </div>
+                <div>
+                  <div className="w-8 h-8 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-2">
+                    <Brain className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-xs text-gray-600">Smart Templates</span>
+                </div>
+                <div>
+                  <div className="w-8 h-8 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-2">
+                    <Zap className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <span className="text-xs text-gray-600">Instant Export</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen bg-gray-50 flex flex-col">
+      <Navigation />
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Compact */}
+        {showSidebar && (
+          <div className="w-full md:w-72 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 z-20 shadow-sm">
+            <div className="p-2">
+              {/* Header - Compact */}
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Design Studio
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSidebar(false)}
+                  className="md:hidden h-6 w-6 p-0"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+
+              {/* Tabs for different sections */}
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-3 h-8">
+                  <TabsTrigger value="design" className="text-xs">
+                    Design
+                  </TabsTrigger>
+                  <TabsTrigger value="templates" className="text-xs">
+                    Templates
+                  </TabsTrigger>
+                  <TabsTrigger value="ai" className="text-xs">
+                    AI Tools
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="design" className="mt-2">
+                  {/* Product Selection - Compact */}
+                  <Card className="mb-2">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs">Choose Product</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-1">
+                      {MOCK_PRODUCTS.map((product) => (
+                        <div
+                          key={product.id}
+                          className={`p-2 border rounded cursor-pointer transition-colors ${
+                            selectedProduct?.id === product.id
+                              ? "bg-blue-50 border-blue-500"
+                              : "hover:bg-gray-50 border-gray-200"
+                          }`}
+                          onClick={() => handleProductSelect(product)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-sm font-medium text-gray-900 truncate">
+                                {product.nameEn}
+                              </h3>
+                              <p className="text-xs text-gray-600 truncate">
+                                {product.description}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-gray-500">
+                                  {product.dimensions.width}×
+                                  {product.dimensions.height}mm
+                                </span>
+                                <span className="text-xs font-medium text-green-600">
+                                  {product.priceRange}
+                                </span>
+                </div>
+                            </div>
+                            {selectedProduct?.id === product.id && (
+                              <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
+              )}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Actions - Compact */}
+              {selectedProduct && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-xs">Quick Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0 space-y-1">
+                    <Button
+                      variant="outline"
+                          className="w-full justify-start h-7 text-xs"
+                      size="sm"
+                          onClick={handleAIAssistant}
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                      AI Text-to-Design
+                    </Button>
+                    <Button
+                      variant="outline"
+                          className="w-full justify-start h-7 text-xs"
+                      size="sm"
+                          onClick={handleGenerateColors}
+                    >
+                          <Palette className="w-3 h-3 mr-1" />
+                          Generate Colors
+                    </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="templates" className="mt-2">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs">
+                        Templates{" "}
+                        {selectedProduct && `(${selectedProduct.category})`}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-2">
+                      {MOCK_TEMPLATES.filter(
+                        (template) =>
+                          !selectedProduct ||
+                          template.category === selectedProduct.category
+                      ).map((template) => (
+                        <div
+                          key={template.id}
+                          className="p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleTemplateSelect(template)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <img
+                              src={template.thumbnail}
+                              alt={template.name}
+                              className="w-12 h-8 object-cover rounded"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 truncate">
+                                {template.name}
+                              </h4>
+                              <div className="flex items-center space-x-1 mt-1">
+                                <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                <span className="text-xs text-gray-600">
+                                  {template.rating}
+                                </span>
+                                <span className="text-xs text-gray-400">•</span>
+                                <span className="text-xs text-gray-600">
+                                  {template.downloads} downloads
+                                </span>
+                  </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {selectedProduct &&
+                        MOCK_TEMPLATES.filter(
+                          (t) => t.category === selectedProduct.category
+                        ).length === 0 && (
+                          <div className="text-center text-gray-500 text-xs py-4">
+                            <p>
+                              No templates available for{" "}
+                              {selectedProduct.nameEn}
+                            </p>
+                </div>
+              )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="ai" className="mt-2">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs">AI Suggestions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-2">
+                      {MOCK_AI_SUGGESTIONS.map((suggestion) => (
+                        <div
+                          key={suggestion.id}
+                          className="p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleAISuggestion(suggestion)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center">
+                              <Wand2 className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900">
+                                {suggestion.title}
+                              </h4>
+                              <p className="text-xs text-gray-600 truncate">
+                                {suggestion.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        )}
+
+        {/* Center - Editor Area */}
+        <div className="flex-1 flex flex-col min-w-0 relative">
+          {/* Mobile Header - Compact */}
+          <div className="md:hidden bg-white border-b border-gray-200 p-2 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSidebar(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+              <h2 className="text-sm font-semibold text-gray-900">
+                Design Editor
+              </h2>
+              <div className="w-8" />
+            </div>
+          </div>
+
+          {/* Toolbar - Compact */}
+          <div className="bg-white border-b border-gray-200 p-1 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-1 lg:space-y-0">
+              <div className="flex items-center space-x-1 overflow-x-auto">
+                {/* Tool Selection - Compact */}
+                <div className="flex items-center space-x-1">
+                  {[
+                    { id: "select", icon: "👆", label: "Select" },
+                    { id: "text", icon: "T", label: "Text" },
+                    { id: "shape", icon: "⬜", label: "Shapes" },
+                    { id: "image", icon: "🖼️", label: "Image" },
+                    { id: "ai", icon: "✨", label: "AI Tools" },
+                  ].map((tool) => (
+                    <Button
+                      key={tool.id}
+                      variant={selectedTool === tool.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleToolChange(tool.id)}
+                      className="h-8 w-8 p-0"
+                      title={tool.label}
+                    >
+                      <span className="text-xs">{tool.icon}</span>
+                    </Button>
+                  ))}
+          </div>
+
+                {/* Tool-specific actions - Compact */}
+                {selectedTool === "text" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddText}
+                    className="h-8 w-8 p-0"
+                    title="Add Text"
+                  >
+                    <Type className="w-3 h-3" />
+                  </Button>
+                )}
+
+                {selectedTool === "shape" && (
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddShape("rectangle")}
+                      className="h-8 w-8 p-0"
+                      title="Add Rectangle"
+                    >
+                      <Square className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddShape("circle")}
+                      className="h-8 w-8 p-0"
+                      title="Add Circle"
+                    >
+                      <Circle className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddShape("triangle")}
+                      className="h-8 w-8 p-0"
+                      title="Add Triangle"
+                    >
+                      <Triangle className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+
+                {selectedTool === "image" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddImage}
+                    className="h-8 w-8 p-0"
+                    title="Add Image"
+                  >
+                    <Image className="w-3 h-3" />
+                  </Button>
+                )}
+
+                {selectedTool === "ai" && (
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAIAssistant}
+                      className="h-8 w-8 p-0"
+                      title="AI Assistant"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateColors}
+                      className="h-8 w-8 p-0"
+                      title="Generate Colors"
+                    >
+                      <Palette className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-1">
+                {/* Zoom Controls - Compact */}
+                <div className="flex items-center space-x-1 bg-gray-100 rounded p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleZoomOut}
+                    disabled={zoom <= 0.1}
+                    className="h-6 w-6 p-0"
+                  >
+                    <span className="text-xs">-</span>
+                  </Button>
+                  <span className="text-xs font-medium min-w-[2.5rem] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleZoomIn}
+                    disabled={zoom >= 3}
+                    className="h-6 w-6 p-0"
+                  >
+                    <span className="text-xs">+</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetZoom}
+                    className="h-6 px-1"
+                  >
+                    <span className="text-xs">100%</span>
+                  </Button>
+                </div>
+
+                {/* View Controls - Compact */}
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant={showGuides ? "default" : "outline"}
+                    size="sm"
+                    onClick={handleToggleGuides}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Target className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant={showGrid ? "default" : "outline"}
+                    size="sm"
+                    onClick={handleToggleGrid}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Grid3X3 className="w-3 h-3" />
+                  </Button>
+                </div>
+
+                {/* Action Buttons - Compact */}
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!selectedProduct}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Save className="w-3 h-3 mr-1" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExport}
+                    disabled={!selectedProduct}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    Export
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleAddToCart}
+                    disabled={!selectedProduct}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    Cart ({cartCount})
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Editor Stage - Real Canvas */}
+          <div className="flex-1 relative bg-gray-100 overflow-hidden">
+            {selectedProduct ? (
+              <div className="relative w-full h-full">
+              <EditorStage
+                  ref={editorRef}
+                  widthMm={canvasDimensions.width}
+                  heightMm={canvasDimensions.height}
+                onStateChange={handleStateChange}
+                onElementSelect={handleElementSelect}
+              />
+
+                {/* Canvas Info Overlay - Compact */}
+                <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm rounded p-1 shadow-sm z-10">
+                  <div className="text-xs text-gray-600 space-y-0.5">
+                    <div className="flex items-center space-x-1">
+                      <span>Size:</span>
+                      <span className="font-medium">
+                        {selectedProduct.dimensions.width}×
+                        {selectedProduct.dimensions.height}mm
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <span>Elements:</span>
+                      <span className="font-medium">
+                        {selectedElements.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <span>Zoom:</span>
+                      <span className="font-medium">
+                        {Math.round(zoom * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Indicators - Compact */}
+                {selectedElements.length > 0 && (
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded p-1 shadow-sm z-10">
+                    <div className="flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3 text-green-600" />
+                      <span className="text-xs font-medium text-gray-700">
+                        {selectedElements.length} selected
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center max-w-sm mx-auto p-6">
+                  <div className="w-12 h-12 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <Plus className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Select a Product to Start
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Choose a product from the sidebar to begin designing
+                  </p>
+                  <Button
+                    onClick={() => setShowSidebar(true)}
+                    className="bg-primary text-white hover:bg-primary-600 h-8 px-3 text-xs"
+                  >
+                    Browse Products
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar - Properties Panel */}
+        <div className="hidden lg:block w-80 bg-white border-l border-gray-200 overflow-hidden flex-shrink-0 shadow-sm">
+          <PropertiesPanel
+            selectedElementData={selectedElements[0]}
+            selectedColors={selectedColors}
+            canvasDimensions={canvasDimensions}
+            setCanvasDimensions={setCanvasDimensions}
+            editorRef={editorRef}
+            onDeleteSelected={handleDeleteSelected}
+            onAddToCart={handleAddToCart}
+            onDownloadPreview={handleDownloadPreview}
+            generateColorPaletteMutation={{
+              mutate: handleGenerateColors,
+              isLoading: false,
+            }}
+            validateForPrint={handleValidateForPrint}
+            exportForPrint={handleExportForPrint}
+            quantity={cartQuantity}
+            setQuantity={setCartQuantity}
+            designName={designName}
+            setDesignName={setDesignName}
+            resizeCanvas={handleResizeCanvas}
+            forceRefreshCanvas={handleForceRefreshCanvas}
+            createTestObject={handleCreateTestObject}
+          />
+        </div>
+
+        {/* Mobile Properties Panel - Slide up from bottom */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-30 max-h-96 overflow-y-auto">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">
+                Properties
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            {selectedElements[0] ? (
+              <div className="space-y-3">
+                {/* Quick Text Controls */}
+                {selectedElements[0].type === "text" && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={selectedElements[0].content || ""}
+                      onChange={(e) => {
+                        if (editorRef?.current?.updateTextContent) {
+                          editorRef.current.updateTextContent(e.target.value);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="Enter text..."
+                    />
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          editorRef?.current?.updateFontWeight?.("bold")
+                        }
+                        className="flex-1 h-8 text-xs"
+                      >
+                        B
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          editorRef?.current?.updateFontStyle?.("italic")
+                        }
+                        className="flex-1 h-8 text-xs"
+                      >
+                        I
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          editorRef?.current?.updateTextDecoration?.(
+                            "underline"
+                          )
+                        }
+                        className="flex-1 h-8 text-xs"
+                      >
+                        U
+                      </Button>
+                    </div>
+                    <div className="flex space-x-1">
+                      <input
+                        type="color"
+                        value={selectedElements[0].style?.color || "#000000"}
+                        onChange={(e) => {
+                          if (editorRef?.current?.updateColor) {
+                            editorRef.current.updateColor(e.target.value);
+                          }
+                        }}
+                        className="w-8 h-8 border border-gray-300 rounded"
+                      />
+                      <input
+                        type="range"
+                        min="8"
+                        max="72"
+                        value={selectedElements[0].style?.fontSize || 28}
+                        onChange={(e) => {
+                          if (editorRef?.current?.updateFontSize) {
+                            editorRef.current.updateFontSize(
+                              parseInt(e.target.value)
+                            );
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <span className="text-xs text-gray-600 w-8 text-center">
+                        {selectedElements[0].style?.fontSize || 28}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  className="w-full h-8 text-xs text-red-600"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete Element
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 text-sm">
+                <p>Select an element to edit its properties</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Cart Dialog */}
+      {showCartDialog && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Add to Cart</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCartDialog(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Product Info */}
+              <div className="bg-gray-50 p-3 rounded">
+                <h4 className="font-medium text-gray-900">
+                  {selectedProduct.nameEn}
+                </h4>
+                <p className="text-sm text-gray-600">
+                  {selectedProduct.description}
+                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm text-gray-600">
+                    {selectedProduct.dimensions.width} ×{" "}
+                    {selectedProduct.dimensions.height}mm
+                  </span>
+                  <span className="font-medium text-green-600">
+                    ฿{selectedProduct.basePrice}
+                  </span>
+                </div>
+              </div>
+
+              {/* Design Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Design Name
+                </label>
+      <input
+                  type="text"
+                  value={designName}
+                  onChange={(e) => setDesignName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter design name"
+                />
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCartQuantity(Math.max(1, cartQuantity - 1))
+                    }
+                    className="h-8 w-8 p-0"
+                  >
+                    -
+                  </Button>
+                  <span className="w-12 text-center font-medium">
+                    {cartQuantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCartQuantity(cartQuantity + 1)}
+                    className="h-8 w-8 p-0"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+
+              {/* Product Options */}
+              {selectedProduct.availableOptionTypes &&
+                selectedProduct.availableOptionTypes.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Options
+                    </label>
+                    <div className="space-y-2">
+                      {selectedProduct.availableOptionTypes.map(
+                        (optionType: string) => (
+                          <div
+                            key={optionType}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="text-sm text-gray-600 capitalize">
+                              {optionType}
+                            </span>
+                            <select
+                              className="text-sm border border-gray-300 rounded px-2 py-1"
+                              onChange={(e) =>
+                                setCartOptions((prev: any) => ({
+                                  ...prev,
+                                  [optionType]: { value: e.target.value },
+                                }))
+                              }
+                            >
+                              <option value="">Select {optionType}</option>
+                              <option value="standard">Standard</option>
+                              <option value="premium">Premium (+฿50)</option>
+                            </select>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {/* Total Price */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Total:</span>
+                  <span className="text-lg font-bold text-green-600">
+                    ฿{selectedProduct.basePrice * cartQuantity}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCartDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmAddToCart} className="flex-1">
+                  Add to Cart
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

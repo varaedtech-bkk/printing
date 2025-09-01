@@ -1,0 +1,33 @@
+<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5a3a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6d4423;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="300" height="400" fill="url(#grad3)"/>
+
+  <!-- Poster mockup -->
+  <rect x="15" y="40" width="270" height="320" fill="white" stroke="#d4a574" stroke-width="2" rx="8"/>
+  <rect x="25" y="60" width="250" height="20" fill="#8b5a3a" rx="3"/>
+  <rect x="25" y="100" width="180" height="12" fill="#374151" rx="2"/>
+  <rect x="25" y="130" width="150" height="10" fill="#6b7280" rx="2"/>
+  <rect x="25" y="160" width="120" height="8" fill="#9ca3af" rx="2"/>
+
+  <!-- Decorative border -->
+  <rect x="25" y="200" width="250" height="2" fill="#d4a574"/>
+  <rect x="25" y="220" width="200" height="2" fill="#d4a574"/>
+  <rect x="25" y="240" width="150" height="2" fill="#d4a574"/>
+
+  <!-- Vintage decorative elements -->
+  <circle cx="50" cy="80" r="8" fill="#d4a574" opacity="0.6"/>
+  <circle cx="250" cy="80" r="8" fill="#d4a574" opacity="0.6"/>
+  <circle cx="50" cy="300" r="6" fill="#d4a574" opacity="0.4"/>
+  <circle cx="250" cy="300" r="6" fill="#d4a574" opacity="0.4"/>
+
+  <!-- Title -->
+  <text x="150" y="25" fill="white" font-family="serif" font-size="16" font-weight="bold" text-anchor="middle">Vintage Poster</text>
+  <text x="150" y="40" fill="white" font-family="serif" font-size="12" opacity="0.8" text-anchor="middle">Classic design</text>
+</svg>
