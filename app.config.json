@@ -1,0 +1,10 @@
+{
+    apps : [
+      {
+        name      : “src”,
+        script    : "npx",
+        interpreter: "none",
+        args: "node dist/index.js -p 9001”
+      }
+    ]
+  }

@@ -1,0 +1,160 @@
+2025-09-02 14:38:18: Error adding to cart: ZodError: [
+2025-09-02 14:38:18:   {
+2025-09-02 14:38:18:     "code": "invalid_type",
+2025-09-02 14:38:18:     "expected": "array",
+2025-09-02 14:38:18:     "received": "object",
+2025-09-02 14:38:18:     "path": [],
+2025-09-02 14:38:18:     "message": "Expected array, received object"
+2025-09-02 14:38:18:   }
+2025-09-02 14:38:18: ]
+2025-09-02 14:38:18:     at get error (file:///root/printing/node_modules/zod/v3/types.js:39:31)
+2025-09-02 14:38:18:     at ZodDefault.parse (file:///root/printing/node_modules/zod/v3/types.js:114:22)
+2025-09-02 14:38:18:     at file:///root/printing/dist/index.js:1872:93
+2025-09-02 14:38:18:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 14:38:18:     at next (/root/printing/node_modules/express/lib/router/route.js:149:13)
+2025-09-02 14:38:18:     at Route.dispatch (/root/printing/node_modules/express/lib/router/route.js:119:3)
+2025-09-02 14:38:18:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 14:38:18:     at /root/printing/node_modules/express/lib/router/index.js:284:15
+2025-09-02 14:38:18:     at Function.process_params (/root/printing/node_modules/express/lib/router/index.js:346:12)
+2025-09-02 14:38:18:     at next (/root/printing/node_modules/express/lib/router/index.js:280:10) {
+2025-09-02 14:38:18:   issues: [
+2025-09-02 14:38:18:     {
+2025-09-02 14:38:18:       code: 'invalid_type',
+2025-09-02 14:38:18:       expected: 'array',
+2025-09-02 14:38:18:       received: 'object',
+2025-09-02 14:38:18:       path: [],
+2025-09-02 14:38:18:       message: 'Expected array, received object'
+2025-09-02 14:38:18:     }
+2025-09-02 14:38:18:   ],
+2025-09-02 14:38:18:   addIssue: [Function (anonymous)],
+2025-09-02 14:38:18:   addIssues: [Function (anonymous)],
+2025-09-02 14:38:18:   errors: [
+2025-09-02 14:38:18:     {
+2025-09-02 14:38:18:       code: 'invalid_type',
+2025-09-02 14:38:18:       expected: 'array',
+2025-09-02 14:38:18:       received: 'object',
+2025-09-02 14:38:18:       path: [],
+2025-09-02 14:38:18:       message: 'Expected array, received object'
+2025-09-02 14:38:18:     }
+2025-09-02 14:38:18:   ]
+2025-09-02 14:38:18: }
+2025-09-02 15:23:56: Error adding to cart: ZodError: [
+2025-09-02 15:23:56:   {
+2025-09-02 15:23:56:     "code": "invalid_type",
+2025-09-02 15:23:56:     "expected": "array",
+2025-09-02 15:23:56:     "received": "object",
+2025-09-02 15:23:56:     "path": [],
+2025-09-02 15:23:56:     "message": "Expected array, received object"
+2025-09-02 15:23:56:   }
+2025-09-02 15:23:56: ]
+2025-09-02 15:23:56:     at get error (file:///root/printing/node_modules/zod/v3/types.js:39:31)
+2025-09-02 15:23:56:     at ZodDefault.parse (file:///root/printing/node_modules/zod/v3/types.js:114:22)
+2025-09-02 15:23:56:     at file:///root/printing/dist/index.js:1872:93
+2025-09-02 15:23:56:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:23:56:     at next (/root/printing/node_modules/express/lib/router/route.js:149:13)
+2025-09-02 15:23:56:     at Route.dispatch (/root/printing/node_modules/express/lib/router/route.js:119:3)
+2025-09-02 15:23:56:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:23:56:     at /root/printing/node_modules/express/lib/router/index.js:284:15
+2025-09-02 15:23:56:     at Function.process_params (/root/printing/node_modules/express/lib/router/index.js:346:12)
+2025-09-02 15:23:56:     at next (/root/printing/node_modules/express/lib/router/index.js:280:10) {
+2025-09-02 15:23:56:   issues: [
+2025-09-02 15:23:56:     {
+2025-09-02 15:23:56:       code: 'invalid_type',
+2025-09-02 15:23:56:       expected: 'array',
+2025-09-02 15:23:56:       received: 'object',
+2025-09-02 15:23:56:       path: [],
+2025-09-02 15:23:56:       message: 'Expected array, received object'
+2025-09-02 15:23:56:     }
+2025-09-02 15:23:56:   ],
+2025-09-02 15:23:56:   addIssue: [Function (anonymous)],
+2025-09-02 15:23:56:   addIssues: [Function (anonymous)],
+2025-09-02 15:23:56:   errors: [
+2025-09-02 15:23:56:     {
+2025-09-02 15:23:56:       code: 'invalid_type',
+2025-09-02 15:23:56:       expected: 'array',
+2025-09-02 15:23:56:       received: 'object',
+2025-09-02 15:23:56:       path: [],
+2025-09-02 15:23:56:       message: 'Expected array, received object'
+2025-09-02 15:23:56:     }
+2025-09-02 15:23:56:   ]
+2025-09-02 15:23:56: }
+2025-09-02 15:25:23: Error adding to cart: ZodError: [
+2025-09-02 15:25:23:   {
+2025-09-02 15:25:23:     "code": "invalid_type",
+2025-09-02 15:25:23:     "expected": "array",
+2025-09-02 15:25:23:     "received": "object",
+2025-09-02 15:25:23:     "path": [],
+2025-09-02 15:25:23:     "message": "Expected array, received object"
+2025-09-02 15:25:23:   }
+2025-09-02 15:25:23: ]
+2025-09-02 15:25:23:     at get error (file:///root/printing/node_modules/zod/v3/types.js:39:31)
+2025-09-02 15:25:23:     at ZodDefault.parse (file:///root/printing/node_modules/zod/v3/types.js:114:22)
+2025-09-02 15:25:23:     at file:///root/printing/dist/index.js:1872:93
+2025-09-02 15:25:23:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:25:23:     at next (/root/printing/node_modules/express/lib/router/route.js:149:13)
+2025-09-02 15:25:23:     at Route.dispatch (/root/printing/node_modules/express/lib/router/route.js:119:3)
+2025-09-02 15:25:23:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:25:23:     at /root/printing/node_modules/express/lib/router/index.js:284:15
+2025-09-02 15:25:23:     at Function.process_params (/root/printing/node_modules/express/lib/router/index.js:346:12)
+2025-09-02 15:25:23:     at next (/root/printing/node_modules/express/lib/router/index.js:280:10) {
+2025-09-02 15:25:23:   issues: [
+2025-09-02 15:25:23:     {
+2025-09-02 15:25:23:       code: 'invalid_type',
+2025-09-02 15:25:23:       expected: 'array',
+2025-09-02 15:25:23:       received: 'object',
+2025-09-02 15:25:23:       path: [],
+2025-09-02 15:25:23:       message: 'Expected array, received object'
+2025-09-02 15:25:23:     }
+2025-09-02 15:25:23:   ],
+2025-09-02 15:25:23:   addIssue: [Function (anonymous)],
+2025-09-02 15:25:23:   addIssues: [Function (anonymous)],
+2025-09-02 15:25:23:   errors: [
+2025-09-02 15:25:23:     {
+2025-09-02 15:25:23:       code: 'invalid_type',
+2025-09-02 15:25:23:       expected: 'array',
+2025-09-02 15:25:23:       received: 'object',
+2025-09-02 15:25:23:       path: [],
+2025-09-02 15:25:23:       message: 'Expected array, received object'
+2025-09-02 15:25:23:     }
+2025-09-02 15:25:23:   ]
+2025-09-02 15:25:23: }
+2025-09-02 15:27:56: Error adding to cart: ZodError: [
+2025-09-02 15:27:56:   {
+2025-09-02 15:27:56:     "code": "invalid_type",
+2025-09-02 15:27:56:     "expected": "array",
+2025-09-02 15:27:56:     "received": "object",
+2025-09-02 15:27:56:     "path": [],
+2025-09-02 15:27:56:     "message": "Expected array, received object"
+2025-09-02 15:27:56:   }
+2025-09-02 15:27:56: ]
+2025-09-02 15:27:56:     at get error (file:///root/printing/node_modules/zod/v3/types.js:39:31)
+2025-09-02 15:27:56:     at ZodDefault.parse (file:///root/printing/node_modules/zod/v3/types.js:114:22)
+2025-09-02 15:27:56:     at file:///root/printing/dist/index.js:1872:93
+2025-09-02 15:27:56:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:27:56:     at next (/root/printing/node_modules/express/lib/router/route.js:149:13)
+2025-09-02 15:27:56:     at Route.dispatch (/root/printing/node_modules/express/lib/router/route.js:119:3)
+2025-09-02 15:27:56:     at Layer.handle [as handle_request] (/root/printing/node_modules/express/lib/router/layer.js:95:5)
+2025-09-02 15:27:56:     at /root/printing/node_modules/express/lib/router/index.js:284:15
+2025-09-02 15:27:56:     at Function.process_params (/root/printing/node_modules/express/lib/router/index.js:346:12)
+2025-09-02 15:27:56:     at next (/root/printing/node_modules/express/lib/router/index.js:280:10) {
+2025-09-02 15:27:56:   issues: [
+2025-09-02 15:27:56:     {
+2025-09-02 15:27:56:       code: 'invalid_type',
+2025-09-02 15:27:56:       expected: 'array',
+2025-09-02 15:27:56:       received: 'object',
+2025-09-02 15:27:56:       path: [],
+2025-09-02 15:27:56:       message: 'Expected array, received object'
+2025-09-02 15:27:56:     }
+2025-09-02 15:27:56:   ],
+2025-09-02 15:27:56:   addIssue: [Function (anonymous)],
+2025-09-02 15:27:56:   addIssues: [Function (anonymous)],
+2025-09-02 15:27:56:   errors: [
+2025-09-02 15:27:56:     {
+2025-09-02 15:27:56:       code: 'invalid_type',
+2025-09-02 15:27:56:       expected: 'array',
+2025-09-02 15:27:56:       received: 'object',
+2025-09-02 15:27:56:       path: [],
+2025-09-02 15:27:56:       message: 'Expected array, received object'
+2025-09-02 15:27:56:     }
+2025-09-02 15:27:56:   ]
+2025-09-02 15:27:56: }

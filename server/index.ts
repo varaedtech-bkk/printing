@@ -102,7 +102,7 @@ app.use((req, res, next) => {
     }
 
     // Start the server on port 3000 (or fallback to another port)
-    const port = 3001;
+    const port = 9001;
     log(`Attempting to start server on port ${port}...`);
 
     server.listen(port, "0.0.0.0", () => {
