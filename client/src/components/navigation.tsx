@@ -56,7 +56,7 @@ export default function Navigation() {
       hasMegaMenu: false
     },
     {
-      href: "/konva-demo",
+      href: "/ai-designer",
       key: "navigation.designer",
       hasMegaMenu: false
     },

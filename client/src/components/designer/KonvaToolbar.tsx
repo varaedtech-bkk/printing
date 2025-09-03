@@ -27,7 +27,8 @@ import {
   Eye,
   Grid,
   Sparkles,
-  Palette
+  Palette,
+  MousePointer2
 } from 'lucide-react';
 
 interface KonvaToolbarProps {
@@ -85,7 +86,7 @@ export function KonvaToolbar({
   const hasSelection = selectedElements.length > 0;
 
   const tools = [
-    { id: 'select', icon: '👆', label: 'Select', description: 'Select and move elements' },
+    { id: 'select', icon: MousePointer2, label: 'Select', description: 'Select and move elements' },
     { id: 'text', icon: 'T', label: 'Text', description: 'Add text elements' },
     { id: 'shape', icon: '⬜', label: 'Shapes', description: 'Add geometric shapes' },
     { id: 'image', icon: '🖼️', label: 'Image', description: 'Add images' },
@@ -123,7 +124,7 @@ export function KonvaToolbar({
                 }`}
                 title={tool.description}
               >
-                <span className="text-lg">{tool.icon}</span>
+                <tool.icon className="w-4 h-4" />
                 <span className="ml-1 lg:ml-2 hidden sm:inline">{tool.label}</span>
               </button>
             ))}

@@ -43,7 +43,7 @@ export default function Templates() {
 
   const handleUseTemplate = (templateId: string, categoryId: string) => {
     const productId = getProductIdForCategory(categoryId);
-    navigate(`/konva-demo?template=${templateId}&product=${productId}`);
+    navigate(`/ai-designer?template=${templateId}&product=${productId}`);
   };
 
   if (isLoading) {
@@ -105,7 +105,7 @@ export default function Templates() {
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Button onClick={() => navigate('/products')} className="bg-primary text-white hover:bg-primary-600">Browse Products First</Button>
-              <Button onClick={() => navigate('/konva-demo')} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+              <Button onClick={() => navigate('/ai-designer')} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                 Start Designing Now
               </Button>
             </div>

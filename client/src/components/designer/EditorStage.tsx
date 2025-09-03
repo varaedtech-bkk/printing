@@ -19,12 +19,13 @@ export type EditorStageProps = {
   heightMm: number;
   bleedMm?: number;
   safeMm?: number;
+  backgroundColor?: string;
   onStateChange?: (state: any) => void;
   onElementSelect?: (element: any) => void;
 };
 
 export type EditorStageRef = {
-  addText: (x?: number, y?: number) => Konva.Text | null;
+  addText: (text?: string, x?: number, y?: number) => Konva.Text | null;
   addImage: (url: string, x?: number, y?: number) => Promise<void>;
   addShape: (
     shapeType: "rectangle" | "circle" | "ellipse" | "triangle",
@@ -37,7 +38,12 @@ export type EditorStageRef = {
   loadState: (state: any) => void;
   zoomIn: () => void;
   zoomOut: () => void;
+  zoomToFit: () => void;
+  zoomTo100: () => void;
   resetView: () => void;
+  toggleGuides: () => void;
+  toggleGrid: () => void;
+  toggleSnapToGrid: () => void;
   // New methods for properties panel
   getSelectedElementData: () => any;
   updateFontSize: (size: number) => boolean;
@@ -46,6 +52,8 @@ export type EditorStageRef = {
   updateTextAlign: (align: "left" | "center" | "right" | "justify") => boolean;
   updateFontWeight: (weight: "normal" | "bold") => boolean;
   updateFontStyle: (style: "normal" | "italic") => boolean;
+  updateOpacity: (opacity: number) => boolean;
+  updateVisibility: (visible: boolean) => boolean;
   updateTextDecoration: (
     decoration: "none" | "underline" | "line-through"
   ) => boolean;
@@ -61,6 +69,10 @@ export type EditorStageRef = {
   saveDesign: () => void;
   // Method for PropertiesPanel layers tab
   getAllTexts: () => any[];
+  // Template methods
+  loadTemplate: (templateData: any) => void;
+  getCurrentTemplate: () => any;
+  exportAsTemplate: (metadata: any) => any;
 };
 
 const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
@@ -70,6 +82,7 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
       heightMm,
       bleedMm = 3,
       safeMm = 3,
+      backgroundColor = "#ffffff",
       onStateChange,
       onElementSelect,
     },
@@ -93,38 +106,206 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
     const [selectedElement, setSelectedElement] = useState<any>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [showGuides, setShowGuides] = useState(true);
+    const [showGrid, setShowGrid] = useState(false);
+    const [snapToGrid, setSnapToGrid] = useState(false);
+    const [gridSize, setGridSize] = useState(20);
+
+    // Touch gesture state
+    const [isPinching, setIsPinching] = useState(false);
+    const [initialDistance, setInitialDistance] = useState(0);
+    const [initialZoom, setInitialZoom] = useState(1);
+    const [isPanning, setIsPanning] = useState(false);
+    const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
     const updateSelectedElementState = useCallback(() => {
       if (managerRef.current) {
         const newElementData = managerRef.current.getSelectedElementData();
-        // Always update to ensure properties panel reflects current state
-        setSelectedElement(newElementData);
-        onElementSelect?.(newElementData);
+
+        // Only update if the data has actually changed to prevent unnecessary re-renders
+        setSelectedElement((prevData: any) => {
+          // More efficient comparison using IDs instead of JSON.stringify
+          const prevId = prevData?.id;
+          const newId = newElementData?.id;
+
+          // Only call onElementSelect if the selection actually changed
+          if (prevId !== newId) {
+            console.log('🎯 updateSelectedElementState: Selection changed from', prevId, 'to', newId);
+            onElementSelect?.(newElementData);
+            return newElementData;
+          }
+
+          console.log('🎯 updateSelectedElementState: No selection change detected');
+          return prevData;
+        });
       }
     }, [onElementSelect]);
 
-    // Initialize stage once
-    useEffect(() => {
-      if (!konvaRef.current || !overlayRef.current) return;
+    // Touch gesture handlers - defined before useEffect that uses them
+    const getTouchDistance = useCallback((touch1: Touch, touch2: Touch) => {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }, []);
+
+    const handleTouchStart = useCallback((e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        // Pinch start
+        e.preventDefault();
+        setIsPinching(true);
+        setInitialDistance(getTouchDistance(e.touches[0], e.touches[1]));
+        setInitialZoom(zoom);
+      } else if (e.touches.length === 1 && !isPinching) {
+        // Pan start
+        setIsPanning(true);
+        setPanStart({
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY
+        });
+      }
+    }, [getTouchDistance, zoom, isPinching]);
+
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+        const scaleChange = currentDistance / initialDistance;
+        const newZoom = Math.max(0.1, Math.min(5.0, initialZoom * scaleChange));
+
+        if (newZoom !== zoom) {
+          setZoom(newZoom);
+          if (managerRef.current) {
+            managerRef.current.setZoom(newZoom);
+          }
+
+          // Update stage wrapper transform
+          if (stageWrapRef.current) {
+            const wrap = stageWrapRef.current;
+            const currentTransform = wrap.style.transform;
+            const match = currentTransform.match(/scale\(([^)]+)\)/);
+            if (match) {
+              const newTransform = currentTransform.replace(
+                /scale\([^)]+\)/,
+                `scale(${newZoom})`
+              );
+              wrap.style.transform = newTransform;
+            }
+          }
+        }
+      }
+    }, [isPinching, getTouchDistance, initialDistance, initialZoom, zoom]);
+
+    const handleTouchEnd = useCallback((e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        setIsPinching(false);
+        setIsPanning(false);
+      }
+    }, []);
+
+    // Initialize stage once - use useLayoutEffect to ensure DOM is ready
+    const stageInitializedRef = useRef(false);
+
+    useLayoutEffect(() => {
+      // Prevent multiple initializations
+      if (stageInitializedRef.current) {
+        console.log('🎨 EditorStage: Stage already initialized, skipping...');
+        return;
+      }
+
+      console.log('🎨 EditorStage: Initializing stage...');
+      console.log('🎨 EditorStage: konvaRef.current:', !!konvaRef.current);
+      console.log('🎨 EditorStage: overlayRef.current:', !!overlayRef.current);
+      
+      if (!konvaRef.current || !overlayRef.current) {
+        console.log('❌ EditorStage: Missing refs, cannot initialize');
+        stageInitializedRef.current = false; // Reset flag on failure
+        return;
+      }
 
       // Get viewport dimensions
       const viewport = viewportRef.current!;
       const viewportWidth = viewport.clientWidth;
       const viewportHeight = viewport.clientHeight;
 
-      // Create stage with proper dimensions
+      console.log('🎨 EditorStage: Viewport dimensions:', viewportWidth, 'x', viewportHeight);
+      console.log('🎨 EditorStage: Viewport element:', viewport);
+      console.log('🎨 EditorStage: Viewport styles:', getComputedStyle(viewport));
+
+      // Ensure we have valid dimensions
+      if (!viewportWidth || !viewportHeight || viewportWidth <= 0 || viewportHeight <= 0) {
+        console.warn('🎨 EditorStage: Invalid viewport dimensions, retrying...');
+        setTimeout(() => {
+          console.log('🎨 EditorStage: Retrying initialization...');
+          // Force re-run of initialization
+          if (konvaRef.current && overlayRef.current) {
+            console.log('🎨 EditorStage: Refs are ready, retrying...');
+          }
+        }, 100);
+        return;
+      }
+
+      // Validate designPx before proceeding
+      if (!designPx.widthPx || !designPx.heightPx || designPx.widthPx <= 0 || designPx.heightPx <= 0) {
+        console.warn('🎨 EditorStage: Invalid designPx dimensions:', designPx);
+        return;
+      }
+
+      // Create stage with design dimensions - scaling will be handled by wrapper transform
+      const stageWidth = designPx.widthPx;
+      const stageHeight = designPx.heightPx;
+
+      // Validate dimensions
+      if (!stageWidth || !stageHeight || stageWidth <= 0 || stageHeight <= 0) {
+        console.error('❌ EditorStage: Invalid design dimensions:', stageWidth, 'x', stageHeight);
+        return;
+      }
+
+      console.log('🎨 EditorStage: Creating stage with design dimensions:', stageWidth, 'x', stageHeight);
+
       const stage = new Konva.Stage({
         container: konvaRef.current!,
-        width: viewportWidth,
-        height: viewportHeight,
+        width: stageWidth,
+        height: stageHeight,
       });
       const layer = new Konva.Layer();
       stage.add(layer);
       stageRef.current = stage;
       layerRef.current = layer;
 
+      console.log('✅ EditorStage: Stage and layer created successfully');
+      console.log('✅ EditorStage: Stage dimensions:', stage.width(), 'x', stage.height());
+      console.log('✅ EditorStage: Konva container element:', konvaRef.current);
+
+      // Mark as initialized
+      stageInitializedRef.current = true;
+
       const manager = new SelectionManager(stage, layer, overlayRef.current!);
       managerRef.current = manager;
+
+      // Sync any existing HTML overlays after initialization
+      setTimeout(() => {
+        if (managerRef.current) {
+          managerRef.current.syncKonvaToHtml();
+        }
+      }, 100);
+
+      // Note: Canvas is now ready for use - add elements via UI controls
+
+      // Set up resize observer for responsive canvas
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0 && stage && stageRef.current === stage) {
+            console.log('🎨 EditorStage: Resizing stage to:', width, 'x', height);
+            stage.width(width);
+            stage.height(height);
+            stage.draw();
+          }
+        }
+      });
+
+      if (viewport) {
+        resizeObserver.observe(viewport);
+      }
 
       stage.on("click tap", (e) => {
         if (e.target === stage) {
@@ -146,135 +327,445 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
         updateSelectedElementState();
       });
 
-      // Draw guides (bleed & safe)
+      // Add touch event listeners for mobile gestures
+      const stageContainer = stage.container();
+      stageContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      stageContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      stageContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+      // Enhanced draw guides with grid support
       const drawGuides = (
         w: number,
         h: number,
         offset: number,
         safe: number
       ) => {
-        layer.find(".guide").forEach((n) => n.destroy());
+        // Validate dimensions before drawing
+        if (!w || !h || w <= 0 || h <= 0) {
+          console.warn('🎨 EditorStage: Invalid dimensions for drawGuides:', w, 'x', h);
+          return;
+        }
 
-        const contentW = w - offset * 2;
-        const contentH = h - offset * 2;
+        // Check if stage has valid dimensions
+        if (!stage || stage.width() <= 0 || stage.height() <= 0) {
+          console.warn('🎨 EditorStage: Stage has invalid dimensions:', stage?.width(), 'x', stage?.height());
+          return;
+        }
 
-        // Background rectangle (white background)
-        const backgroundRect = new Konva.Rect({
-          x: 0,
-          y: 0,
-          width: w,
-          height: h,
-          fill: "#ffffff",
-          stroke: "#e5e7eb",
-          strokeWidth: 1,
-          name: "guide",
-          listening: false,
-        });
+        try {
+          layer.find(".guide").forEach((n) => n.destroy());
 
-        // Bleed area (outer rectangle)
-        const bleedRect = new Konva.Rect({
-          x: 0,
-          y: 0,
-          width: w,
-          height: h,
-          stroke: "#ff4d4f",
-          strokeWidth: 1,
-          dash: [8, 8],
-          name: "guide",
-          listening: false,
-        });
+          const contentW = w - offset * 2;
+          const contentH = h - offset * 2;
 
-        // Safe print area (inner rectangle)
-        const safeRect = new Konva.Rect({
-          x: offset + safe,
-          y: offset + safe,
-          width: contentW - safe * 2,
-          height: contentH - safe * 2,
-          stroke: "#52c41a",
-          strokeWidth: 1,
-          dash: [6, 6],
-          name: "guide",
-          listening: false,
-        });
+          // Background rectangle with accurate dimensions and color
+          const backgroundRect = new Konva.Rect({
+            x: 0,
+            y: 0,
+            width: w,
+            height: h,
+            fill: backgroundColor,
+            stroke: "#d1d5db", // Slightly darker border for better visibility
+            strokeWidth: 1, // Increased for better visibility
+            cornerRadius: 4, // Add rounded corners for modern look
+            shadowColor: 'rgba(0, 0, 0, 0.1)',
+            shadowBlur: 4,
+            shadowOffset: { x: 0, y: 2 },
+            shadowOpacity: 0.3,
+            name: "background",
+            listening: false,
+          });
 
-        layer.add(backgroundRect, bleedRect, safeRect);
-        layer.draw();
+          // Bleed area (outer rectangle) - only if guides are enabled
+          if (showGuides) {
+            const bleedRect = new Konva.Rect({
+              x: 0,
+              y: 0,
+              width: w,
+              height: h,
+              stroke: "#ff4d4f",
+              strokeWidth: 1,
+              dash: [8, 8],
+              name: "guide",
+              listening: false,
+            });
+            layer.add(bleedRect);
+          }
+
+          // Safe print area (inner rectangle) - only if guides are enabled
+          if (showGuides) {
+            const safeRect = new Konva.Rect({
+              x: offset + safe,
+              y: offset + safe,
+              width: contentW - safe * 2,
+              height: contentH - safe * 2,
+              stroke: "#52c41a",
+              strokeWidth: 1,
+              dash: [6, 6],
+              name: "guide",
+              listening: false,
+            });
+            layer.add(safeRect);
+          }
+
+          // Draw grid if enabled
+          if (showGrid) {
+            const gridGroup = new Konva.Group({ name: "guide" });
+
+            // Vertical lines
+            for (let x = gridSize; x < w; x += gridSize) {
+              const line = new Konva.Line({
+                points: [x, 0, x, h],
+                stroke: "#e5e7eb",
+                strokeWidth: 0.5,
+                dash: [2, 2],
+                listening: false,
+              });
+              gridGroup.add(line);
+            }
+
+            // Horizontal lines
+            for (let y = gridSize; y < h; y += gridSize) {
+              const line = new Konva.Line({
+                points: [0, y, w, y],
+                stroke: "#e5e7eb",
+                strokeWidth: 0.5,
+                dash: [2, 2],
+                listening: false,
+              });
+              gridGroup.add(line);
+            }
+
+            layer.add(gridGroup);
+          }
+
+          layer.add(backgroundRect);
+          layer.draw();
+        } catch (error) {
+          console.error('❌ EditorStage: Error in drawGuides:', error);
+        }
       };
 
       (stage as any).drawGuides = drawGuides;
 
       return () => {
-        stage.destroy();
-      };
-    }, []);
+        // Clean up resize observer
+        if (viewport && resizeObserver) {
+          resizeObserver.unobserve(viewport);
+        }
 
-    // Apply product size and compute design px
-    useEffect(() => {
-      const box = designBoxPx({ widthMm, heightMm, bleedMm, safeMm });
+        // Clean up touch event listeners
+        const stageContainer = stage.container();
+        stageContainer.removeEventListener('touchstart', handleTouchStart);
+        stageContainer.removeEventListener('touchmove', handleTouchMove);
+        stageContainer.removeEventListener('touchend', handleTouchEnd);
+
+        stage.destroy();
+
+        // Reset initialization flag for potential re-initialization
+        stageInitializedRef.current = false;
+      };
+    }, [handleTouchStart, handleTouchMove, handleTouchEnd]); // Keep dependencies but make handlers stable
+
+      // Apply product size and compute design px
+  useEffect(() => {
+    console.log('🎨 EditorStage: Props changed - widthMm:', widthMm, 'heightMm:', heightMm, 'bleedMm:', bleedMm, 'safeMm:', safeMm);
+    // Use a lower DPI for canvas display to make it more reasonable
+    const box = designBoxPx({ widthMm, heightMm, bleedMm, safeMm }, 72); // Use 72 DPI for display
+    console.log('🎨 EditorStage: Converting dimensions:', {
+      input: { widthMm, heightMm, bleedMm, safeMm },
+      output: box
+    });
       setDesignPx({
         widthPx: box.widthPx,
         heightPx: box.heightPx,
         offset: box.contentOffsetPx,
       });
-    }, [widthMm, heightMm, bleedMm, safeMm]);
 
-    // Layout & zoom fit-to-screen
-    const fitToViewport = () => {
-      const vp = viewportRef.current!;
-      const wrap = stageWrapRef.current!;
-      const stage = stageRef.current!;
-      const { widthPx, heightPx } = designPx;
-      if (!widthPx || !heightPx) return;
-
-      // Calculate scale to fit design in viewport with padding
-      const padding = 80; // Increased padding for better visibility
-      const availableWidth = vp.clientWidth - padding * 2;
-      const availableHeight = vp.clientHeight - padding * 2;
-
-      // Calculate scale to fit the design within available space
-      const scaleX = availableWidth / widthPx;
-      const scaleY = availableHeight / heightPx;
-      let scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond 100%
-
-      // For very large canvases (A3, A4), ensure minimum visibility
-      if (widthPx > 1000 || heightPx > 1000) {
-        scale = Math.min(scale, 0.8); // Cap at 80% for large formats
+      // Redraw guides when dimensions change
+      if (stageRef.current && (stageRef.current as any).drawGuides && box.widthPx > 0 && box.heightPx > 0) {
+        (stageRef.current as any).drawGuides(box.widthPx, box.heightPx, box.contentOffsetPx, 3);
       }
+        }, [widthMm, heightMm, bleedMm, safeMm, backgroundColor]);
 
-      // For very small canvases (business cards), ensure they're not too small
-      if (widthPx < 200 && heightPx < 200) {
-        scale = Math.max(scale, 0.3); // Minimum 30% for small formats
+    // Force re-render when dimensions change
+    const [dimensionsKey, setDimensionsKey] = useState(0);
+    useEffect(() => {
+      console.log('🎨 EditorStage: Dimensions changed, forcing re-render');
+      setDimensionsKey(prev => prev + 1);
+      // Reset initialization flag so stage will reinitialize with new dimensions
+      stageInitializedRef.current = false;
+    }, [widthMm, heightMm]);
+
+    // Apply current zoom level when dimensions change (preserve user's zoom preference)
+    useEffect(() => {
+      if (designPx.widthPx && designPx.heightPx && zoom > 0) {
+        console.log('🎨 EditorStage: Applying current zoom level to new dimensions');
+        // Will be handled by the applyZoomChange function when it's available
       }
+    }, [designPx.widthPx, designPx.heightPx, zoom]);
 
-      // Center the design
-      const scaledWidth = widthPx * scale;
-      const scaledHeight = heightPx * scale;
-      const offsetX = (vp.clientWidth - scaledWidth) / 2;
-      const offsetY = (vp.clientHeight - scaledHeight) / 2;
+    // Update canvas container dimensions when designPx changes
+    useEffect(() => {
+      if (designPx.widthPx && designPx.heightPx && viewportRef.current) {
+        const vp = viewportRef.current;
+        const { widthPx, heightPx } = designPx;
 
-      // Apply transform to stage wrapper
-      wrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-      wrap.style.transformOrigin = "0 0";
+        // Calculate scale to fit in viewport
+        const padding = 60;
+        const availableWidth = vp.clientWidth - padding * 2;
+        const availableHeight = vp.clientHeight - padding * 2;
 
-      // Update stage size to match design dimensions
+        const scaleX = availableWidth / widthPx;
+        const scaleY = availableHeight / heightPx;
+        const scale = Math.min(scaleX, scaleY);
+
+        const scaledWidth = widthPx * scale;
+        const scaledHeight = heightPx * scale;
+        const offsetX = (vp.clientWidth - scaledWidth) / 2;
+        const offsetY = (vp.clientHeight - scaledHeight) / 2;
+
+        // Update canvas container immediately
+        const konvaContainer = document.getElementById('konva-container');
+        const htmlOverlay = document.getElementById('html-overlay');
+
+        if (konvaContainer) {
+          konvaContainer.style.width = `${scaledWidth}px`;
+          konvaContainer.style.height = `${scaledHeight}px`;
+          konvaContainer.style.left = `${offsetX}px`;
+          konvaContainer.style.top = `${offsetY}px`;
+        }
+
+        if (htmlOverlay) {
+          htmlOverlay.style.width = `${scaledWidth}px`;
+          htmlOverlay.style.height = `${scaledHeight}px`;
+          htmlOverlay.style.left = `${offsetX}px`;
+          htmlOverlay.style.top = `${offsetY}px`;
+        }
+
+        console.log('🎨 EditorStage: Updated canvas dimensions:', scaledWidth, 'x', scaledHeight);
+        console.log('🎨 EditorStage: Design aspect ratio:', widthPx / heightPx);
+        console.log('🎨 EditorStage: Scale applied:', scale);
+
+        // Update the visual indicator with current dimensions
+        let indicator = document.getElementById('canvas-size-indicator');
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.id = 'canvas-size-indicator';
+          indicator.style.cssText = `
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
+            color: #3b82f6;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            z-index: 10;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+          `;
+          document.getElementById('editor-viewport')?.appendChild(indicator);
+        }
+
+        if (indicator) {
+          const displayWidth = Math.round(widthPx * 25.4 / 72); // Convert pixels back to mm at 72 DPI
+          const displayHeight = Math.round(heightPx * 25.4 / 72);
+          indicator.textContent = `🎨 ${displayWidth}×${displayHeight}mm Canvas`;
+        }
+      }
+    }, [designPx.widthPx, designPx.heightPx]);
+
+    // Enhanced layout & zoom fit-to-screen with better aspect ratio handling
+  const fitToViewport = useCallback(() => {
+    console.log('🎨 EditorStage: fitToViewport called');
+
+    // Add null checks for required refs
+    if (!viewportRef.current || !stageWrapRef.current || !stageRef.current) {
+      console.warn('🎨 EditorStage: Missing refs, skipping fitToViewport');
+      return;
+    }
+
+    const vp = viewportRef.current;
+    const wrap = stageWrapRef.current;
+    const stage = stageRef.current;
+    const { widthPx, heightPx } = designPx;
+
+    console.log('🎨 EditorStage: Design dimensions:', widthPx, 'x', heightPx);
+    console.log('🎨 EditorStage: Viewport dimensions:', vp.clientWidth, 'x', vp.clientHeight);
+
+    if (!widthPx || !heightPx) {
+      console.log('❌ EditorStage: Invalid design dimensions, skipping fitToViewport');
+      return;
+    }
+
+    // Calculate optimal scale with better aspect ratio handling and responsive considerations
+    const isMobile = vp.clientWidth < 768;
+    const isTablet = vp.clientWidth < 1024;
+
+    // Adjust padding based on screen size for better responsive behavior
+    const padding = isMobile ? 20 : isTablet ? 40 : 60;
+    const availableWidth = vp.clientWidth - padding * 2;
+    const availableHeight = vp.clientHeight - padding * 2;
+
+    // Calculate scale factors for both dimensions
+    const scaleX = availableWidth / widthPx;
+    const scaleY = availableHeight / heightPx;
+
+    // Use the smaller scale to ensure the entire design fits
+    let scale = Math.min(scaleX, scaleY);
+
+    // Apply minimum and maximum zoom limits for better UX
+    const minScale = 0.05; // Minimum 5% zoom for very small screens
+    const maxScale = 3.0; // Maximum 300% zoom
+
+    // Responsive scaling adjustments
+    if (isMobile) {
+      // On mobile, be more aggressive with scaling to fit content
+      scale = Math.max(scale, 0.1); // Ensure minimum visibility on mobile
+      scale = Math.min(scale, 1.5); // Don't go too big on small screens
+    } else if (isTablet) {
+      scale = Math.min(scale, 2.0); // Moderate scaling for tablets
+    }
+
+    // For very large designs, cap at reasonable zoom levels
+    if (widthPx > 1500 || heightPx > 1500) {
+      scale = Math.min(scale, 0.8); // Cap at 80% for very large formats
+    }
+
+    // For very small designs, ensure minimum visibility
+    if (widthPx < 200 && heightPx < 200) {
+      scale = Math.max(scale, 0.8); // Minimum 80% for small formats
+    }
+
+    // Apply zoom limits
+    scale = Math.max(minScale, Math.min(maxScale, scale));
+
+    // Calculate centered position with improved centering logic and boundary checks
+    const scaledWidth = widthPx * scale;
+    const scaledHeight = heightPx * scale;
+
+    // For better centering, ensure we account for the design's aspect ratio
+    const designAspectRatio = widthPx / heightPx;
+    const viewportAspectRatio = vp.clientWidth / vp.clientHeight;
+
+    let finalScale = scale;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // If the design is wider than the viewport aspect ratio, fit by height
+    if (designAspectRatio > viewportAspectRatio) {
+      const availableWidth = vp.clientHeight * designAspectRatio;
+      finalScale = Math.min(scale, vp.clientWidth / availableWidth);
+    } else {
+      const availableHeight = vp.clientWidth / designAspectRatio;
+      finalScale = Math.min(scale, vp.clientHeight / availableHeight);
+    }
+
+    // Recalculate scaled dimensions with final scale
+    const finalScaledWidth = widthPx * finalScale;
+    const finalScaledHeight = heightPx * finalScale;
+
+    // Center the design in the viewport, but ensure it doesn't go out of bounds
+    offsetX = (vp.clientWidth - finalScaledWidth) / 2;
+    offsetY = (vp.clientHeight - finalScaledHeight) / 2;
+
+    // Ensure canvas stays within viewport bounds with padding
+    const minOffsetX = -padding;
+    const minOffsetY = -padding;
+    const maxOffsetX = vp.clientWidth - finalScaledWidth + padding;
+    const maxOffsetY = vp.clientHeight - finalScaledHeight + padding;
+
+    offsetX = Math.max(minOffsetX, Math.min(offsetX, maxOffsetX));
+    offsetY = Math.max(minOffsetY, Math.min(offsetY, maxOffsetY));
+
+    // Apply smooth transform with transition
+    wrap.style.transition = 'transform 0.3s ease-out';
+    wrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${finalScale})`;
+    wrap.style.transformOrigin = "top left";
+
+    // Update canvas container to reflect actual design dimensions
+    const konvaContainer = document.getElementById('konva-container');
+    const htmlOverlay = document.getElementById('html-overlay');
+
+    if (konvaContainer) {
+      const scaledWidth = widthPx * finalScale;
+      const scaledHeight = heightPx * finalScale;
+
+      // Set the container to match the scaled design dimensions
+      konvaContainer.style.width = `${scaledWidth}px`;
+      konvaContainer.style.height = `${scaledHeight}px`;
+      konvaContainer.style.left = `${offsetX}px`;
+      konvaContainer.style.top = `${offsetY}px`;
+    }
+
+    // Also update HTML overlay to match
+    if (htmlOverlay) {
+      const scaledWidth = widthPx * finalScale;
+      const scaledHeight = heightPx * finalScale;
+
+      // Position HTML overlay to match canvas container exactly
+      htmlOverlay.style.width = `${scaledWidth}px`;
+      htmlOverlay.style.height = `${scaledHeight}px`;
+      htmlOverlay.style.left = `${offsetX}px`;
+      htmlOverlay.style.top = `${offsetY}px`;
+      htmlOverlay.style.transform = `scale(${finalScale})`;
+      htmlOverlay.style.transformOrigin = 'top left';
+    }
+
+    // Update stage size to match design dimensions while preserving aspect ratio
+    // Add null check before accessing stage properties
+    if (!stage) {
+      console.warn('🎨 EditorStage: Stage is null, skipping aspect ratio adjustment');
+    } else {
+      // Set stage size to design dimensions - the wrapper transform will handle scaling
       stage.width(widthPx);
       stage.height(heightPx);
+    }
 
-      // Update zoom state
-      setZoom(scale);
+    // Update zoom state
+    setZoom(finalScale);
 
-      // Draw guides if enabled
-      if (showGuides) {
-        (stage as any).drawGuides(widthPx, heightPx, designPx.offset, 3);
-      }
+    console.log('🎨 EditorStage: Applied enhanced transform:', {
+      offsetX,
+      offsetY,
+      scale: finalScale,
+      finalScaledWidth,
+      finalScaledHeight,
+      viewportWidth: vp.clientWidth,
+      viewportHeight: vp.clientHeight,
+      designAspectRatio: widthPx / heightPx,
+      viewportAspectRatio: vp.clientWidth / vp.clientHeight
+    });
 
-      // Update SelectionManager zoom
-      if (managerRef.current) {
-        managerRef.current.setZoom(scale);
-      }
+    // Draw guides if enabled
+    if (showGuides && widthPx > 0 && heightPx > 0 && stage && (stage as any).drawGuides) {
+      (stage as any).drawGuides(widthPx, heightPx, designPx.offset, 3);
+    }
 
+    // Update SelectionManager zoom
+    if (managerRef.current) {
+      managerRef.current.setZoom(scale);
+    }
+
+    // Only draw if stage is available
+    if (stage) {
       stage.draw();
-    };
+    }
+
+    // Remove transition after animation completes
+    setTimeout(() => {
+      if (wrap.style.transition) {
+        wrap.style.transition = '';
+      }
+    }, 300);
+  }, [designPx, showGuides]);
 
     // Fit to viewport when design dimensions change
     useEffect(() => {
@@ -283,28 +774,47 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
       }
     }, [designPx.widthPx, designPx.heightPx]);
 
-    // Handle window resize
+    // Handle window resize with debouncing
     useEffect(() => {
+      let resizeTimeout: NodeJS.Timeout;
+
       const handleResize = () => {
-        if (designPx.widthPx && designPx.heightPx) {
-          fitToViewport();
-        }
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (designPx.widthPx && designPx.heightPx && viewportRef.current) {
+            console.log('🎨 EditorStage: Window resized, updating canvas position');
+            // Use current zoom level to maintain user's zoom preference
+            if (zoom > 0) {
+              applyZoomChange(zoom);
+            } else {
+              fitToViewport();
+            }
+          }
+        }, 100); // Debounce resize events
       };
 
       window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, [designPx.widthPx, designPx.heightPx]);
+      return () => {
+        clearTimeout(resizeTimeout);
+        window.removeEventListener("resize", handleResize);
+      };
+    }, [designPx.widthPx, designPx.heightPx, zoom]);
 
     // Public API methods
     const addText = useCallback(
-      (x?: number, y?: number): Konva.Text | null => {
-        // Calculate center position for the text
-        const centerX = x ?? designPx.widthPx / 2;
-        const centerY = y ?? designPx.heightPx / 2;
+      (text?: string, x?: number, y?: number): Konva.Text | null => {
+        // Calculate center position for the text, accounting for text dimensions
+        const defaultWidth = 200;
+        const defaultFontSize = 32;
 
-        // Add text at the specified position (no adjustment needed)
+        const centerX = x ?? Math.max(0, (designPx.widthPx - defaultWidth) / 2);
+        const centerY = y ?? Math.max(0, (designPx.heightPx - defaultFontSize) / 2);
+
+        console.log('🎨 EditorStage: Adding text at center position:', { centerX, centerY, designPx });
+
+        // Add text at the specified position with the provided text content
         const newTextNode = managerRef.current?.addText(
-          "Click to edit text",
+          text || "Click to edit text",
           centerX,
           centerY
         );
@@ -320,10 +830,30 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
                 setSelectedId(textId);
                 // Ensure the SelectionManager knows about this selection
                 managerRef.current.select(newTextNode);
+
+                // Force sync HTML overlay immediately after adding text
+                managerRef.current.syncKonvaToHtml();
+
+                // Also sync after a short delay to ensure proper positioning
+                setTimeout(() => {
+                  if (managerRef.current) {
+                    managerRef.current.syncKonvaToHtml();
+                  }
+                }, 50);
+
                 setTimeout(() => {
                   const elementData = managerRef.current?.getSelectedElementData();
+                  console.log("📋 EditorStage: getSelectedElementData result:", elementData);
+                  console.log("📋 EditorStage: elementData type:", elementData?.type);
+                  console.log("📋 EditorStage: elementData id:", elementData?.id);
+                  console.log("📋 EditorStage: calling onElementSelect with:", elementData);
                   setSelectedElement(elementData);
-                  onElementSelect?.(elementData);
+                  if (onElementSelect) {
+                    console.log("📋 EditorStage: onElementSelect callback exists, calling it");
+                    onElementSelect(elementData);
+                  } else {
+                    console.log("📋 EditorStage: onElementSelect callback is undefined!");
+                  }
                 }, 50);
               }
             } catch (error) {
@@ -348,15 +878,28 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
           centerY,
           designPx,
         });
+        console.log("🖼️ EditorStage: managerRef.current exists:", !!managerRef.current);
+        console.log("🖼️ EditorStage: addImageFromUrl exists:", !!managerRef.current?.addImageFromUrl);
         try {
           await managerRef.current?.addImageFromUrl(url, centerX, centerY);
           managerRef.current?.saveState();
           console.log("✅ Image added successfully");
+
+          // Update selection state after image is added
+          setTimeout(() => {
+            const elementData = managerRef.current?.getSelectedElementData();
+            console.log("📋 EditorStage: Image added, updating selection state:", elementData);
+            setSelectedElement(elementData);
+            if (onElementSelect) {
+              console.log("📋 EditorStage: Calling onElementSelect for image:", elementData);
+              onElementSelect(elementData);
+            }
+          }, 50);
         } catch (error) {
           console.error("❌ Failed to add image:", error);
         }
       },
-      [designPx.widthPx, designPx.heightPx]
+      [designPx.widthPx, designPx.heightPx, onElementSelect]
     );
 
     const addShape = useCallback(
@@ -365,8 +908,11 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
         x?: number,
         y?: number
       ): Konva.Shape | null => {
-        const centerX = x ?? designPx.widthPx / 2 - 50;
-        const centerY = y ?? designPx.heightPx / 2 - 50;
+        // Default shape dimensions
+        const defaultShapeSize = 100;
+
+        const centerX = x ?? Math.max(0, (designPx.widthPx - defaultShapeSize) / 2);
+        const centerY = y ?? Math.max(0, (designPx.heightPx - defaultShapeSize) / 2);
 
         console.log("🎨 EditorStage: Adding shape", {
           shapeType,
@@ -456,62 +1002,197 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
       console.log("Save design - not implemented yet");
     }, []);
 
-    // Zoom functions
-    const zoomIn = useCallback(() => {
-      const newZoom = Math.min(zoom * 1.2, 5);
-      setZoom(newZoom);
+    // Enhanced zoom functions with better controls and limits
+    // Function to apply zoom changes without recalculating fit
+    const applyZoomChange = useCallback((newZoom: number) => {
+      console.log('🎨 EditorStage: Applying zoom change to:', newZoom);
+
+      if (!viewportRef.current || !stageWrapRef.current) {
+        console.warn('🎨 EditorStage: Missing refs for zoom change');
+        return;
+      }
+
+      const vp = viewportRef.current;
+      const wrap = stageWrapRef.current;
+      const { widthPx, heightPx } = designPx;
+
+      // Calculate position based on new zoom level
+      const scaledWidth = widthPx * newZoom;
+      const scaledHeight = heightPx * newZoom;
+
+      // Ensure the canvas stays within viewport bounds with some padding
+      const padding = 20; // Minimum padding from viewport edges
+      const maxOffsetX = Math.max(0, vp.clientWidth - scaledWidth - padding);
+      const maxOffsetY = Math.max(0, vp.clientHeight - scaledHeight - padding);
+
+      // Calculate centered position but constrain to viewport bounds
+      let offsetX = (vp.clientWidth - scaledWidth) / 2;
+      let offsetY = (vp.clientHeight - scaledHeight) / 2;
+
+      // Constrain offsets to keep canvas within viewport
+      offsetX = Math.max(-padding, Math.min(offsetX, maxOffsetX + padding));
+      offsetY = Math.max(-padding, Math.min(offsetY, maxOffsetY + padding));
+
+      // For very large canvases, allow some negative offset to keep part visible
+      // but ensure at least 20% of the canvas is visible
+      if (scaledWidth > vp.clientWidth) {
+        const maxNegativeOffset = -(scaledWidth - vp.clientWidth * 0.2);
+        offsetX = Math.max(maxNegativeOffset, offsetX);
+      }
+      if (scaledHeight > vp.clientHeight) {
+        const maxNegativeOffset = -(scaledHeight - vp.clientHeight * 0.2);
+        offsetY = Math.max(maxNegativeOffset, offsetY);
+      }
+
+      // Ensure canvas doesn't go too far in positive directions either
+      if (scaledWidth > vp.clientWidth) {
+        offsetX = Math.min(offsetX, padding);
+      }
+      if (scaledHeight > vp.clientHeight) {
+        offsetY = Math.min(offsetY, padding);
+      }
+
+      console.log('🎨 EditorStage: Zoom positioning:', {
+        newZoom,
+        scaledWidth,
+        scaledHeight,
+        offsetX,
+        offsetY,
+        viewport: { width: vp.clientWidth, height: vp.clientHeight }
+      });
+
+      // Apply transform with new zoom
+      wrap.style.transition = 'transform 0.2s ease-out';
+      wrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${newZoom})`;
+
+      // Update canvas container dimensions
+      const konvaContainer = document.getElementById('konva-container');
+      const htmlOverlay = document.getElementById('html-overlay');
+
+      if (konvaContainer) {
+        konvaContainer.style.width = `${scaledWidth}px`;
+        konvaContainer.style.height = `${scaledHeight}px`;
+        konvaContainer.style.left = `${offsetX}px`;
+        konvaContainer.style.top = `${offsetY}px`;
+        // Ensure container stays within reasonable bounds
+        konvaContainer.style.maxWidth = `${vp.clientWidth + padding * 2}px`;
+        konvaContainer.style.maxHeight = `${vp.clientHeight + padding * 2}px`;
+      }
+
+      if (htmlOverlay) {
+        // Position HTML overlay to match canvas container exactly
+        htmlOverlay.style.width = `${scaledWidth}px`;
+        htmlOverlay.style.height = `${scaledHeight}px`;
+        htmlOverlay.style.left = `${offsetX}px`;
+        htmlOverlay.style.top = `${offsetY}px`;
+        htmlOverlay.style.transform = `scale(${newZoom})`;
+        htmlOverlay.style.transformOrigin = 'top left';
+        // Ensure overlay stays within reasonable bounds
+        htmlOverlay.style.maxWidth = `${vp.clientWidth + padding * 2}px`;
+        htmlOverlay.style.maxHeight = `${vp.clientHeight + padding * 2}px`;
+      }
+
+      // Update SelectionManager zoom
       if (managerRef.current) {
         managerRef.current.setZoom(newZoom);
       }
-      // Update stage wrapper transform
-      if (stageWrapRef.current) {
-        const currentTransform = stageWrapRef.current.style.transform;
-        const match = currentTransform.match(/scale\(([^)]+)\)/);
-        if (match) {
-          const newTransform = currentTransform.replace(
-            /scale\([^)]+\)/,
-            `scale(${newZoom})`
-          );
-          stageWrapRef.current.style.transform = newTransform;
-        }
-      }
+
       // Force refresh HTML overlay positioning
       setTimeout(() => {
         if (managerRef.current) {
           managerRef.current.refreshHtmlOverlay();
+          // Also trigger syncKonvaToHtml to ensure text overlays are positioned correctly
+          managerRef.current.syncKonvaToHtml();
         }
-      }, 50);
-    }, [zoom]);
+        if (wrap.style.transition) {
+          wrap.style.transition = '';
+        }
+      }, 200);
+    }, [designPx]);
+
+    const zoomIn = useCallback(() => {
+      const zoomStep = 0.25; // More granular zoom steps
+      const maxZoom = 5.0; // Maximum zoom level
+      const newZoom = Math.min(zoom + zoomStep, maxZoom);
+
+      if (newZoom !== zoom) {
+        setZoom(newZoom);
+        applyZoomChange(newZoom);
+      }
+    }, [zoom, applyZoomChange]);
 
     const zoomOut = useCallback(() => {
-      const newZoom = Math.max(zoom / 1.2, 0.1);
-      setZoom(newZoom);
-      if (managerRef.current) {
-        managerRef.current.setZoom(newZoom);
+      const zoomStep = 0.25; // More granular zoom steps
+      const minZoom = 0.1; // Minimum zoom level
+      const newZoom = Math.max(zoom - zoomStep, minZoom);
+
+      if (newZoom !== zoom) {
+        setZoom(newZoom);
+        applyZoomChange(newZoom);
       }
-      // Update stage wrapper transform
-      if (stageWrapRef.current) {
-        const currentTransform = stageWrapRef.current.style.transform;
-        const match = currentTransform.match(/scale\(([^)]+)\)/);
-        if (match) {
-          const newTransform = currentTransform.replace(
-            /scale\([^)]+\)/,
-            `scale(${newZoom})`
-          );
-          stageWrapRef.current.style.transform = newTransform;
+    }, [zoom, applyZoomChange]);
+
+    // New zoom to specific levels
+    const zoomToFit = useCallback(() => {
+      fitToViewport();
+    }, [fitToViewport]);
+
+    const zoomTo100 = useCallback(() => {
+      // Calculate the optimal scale to fit the design at 100% zoom
+      if (viewportRef.current) {
+        const vp = viewportRef.current;
+        const { widthPx, heightPx } = designPx;
+        const designAspectRatio = widthPx / heightPx;
+        const viewportAspectRatio = vp.clientWidth / vp.clientHeight;
+
+        let optimalScale = 1.0;
+
+        // Adjust scale to fit the design properly at 100%
+        if (designAspectRatio > viewportAspectRatio) {
+          const availableWidth = vp.clientHeight * designAspectRatio;
+          optimalScale = Math.min(1, vp.clientWidth / availableWidth);
+        } else {
+          const availableHeight = vp.clientWidth / designAspectRatio;
+          optimalScale = Math.min(1, vp.clientHeight / availableHeight);
         }
+
+        // Apply the calculated optimal scale
+        setZoom(optimalScale);
+        applyZoomChange(optimalScale);
       }
-      // Force refresh HTML overlay positioning
-      setTimeout(() => {
-        if (managerRef.current) {
-          managerRef.current.refreshHtmlOverlay();
-        }
-      }, 50);
-    }, [zoom]);
+    }, [designPx, applyZoomChange]);
 
     const resetView = useCallback(() => {
-      fitToViewport();
-    }, []);
+      console.log('🎨 EditorStage: Resetting view to fit canvas');
+      setZoom(1.0); // Reset zoom to 100%
+      fitToViewport(); // Then fit to viewport
+    }, [fitToViewport]);
+
+    // Grid and guide controls
+    const toggleGuides = useCallback(() => {
+      const newShowGuides = !showGuides;
+      setShowGuides(newShowGuides);
+      if (stageRef.current && (stageRef.current as any).drawGuides && designPx.widthPx > 0 && designPx.heightPx > 0) {
+        const { widthPx, heightPx, offset } = designPx;
+        (stageRef.current as any).drawGuides(widthPx, heightPx, offset, 3);
+      }
+    }, [showGuides, designPx]);
+
+    const toggleGrid = useCallback(() => {
+      const newShowGrid = !showGrid;
+      setShowGrid(newShowGrid);
+      if (stageRef.current && (stageRef.current as any).drawGuides && designPx.widthPx > 0 && designPx.heightPx > 0) {
+        const { widthPx, heightPx, offset } = designPx;
+        (stageRef.current as any).drawGuides(widthPx, heightPx, offset, 3);
+      }
+    }, [showGrid, designPx]);
+
+    const toggleSnapToGrid = useCallback(() => {
+      setSnapToGrid(!snapToGrid);
+      if (managerRef.current) {
+        managerRef.current.setSnapToGrid(!snapToGrid);
+      }
+    }, [snapToGrid]);
 
     // Expose actions to parent - use useMemo to prevent unnecessary re-renders
     const exposedActions = useMemo(() => {
@@ -539,7 +1220,12 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
         loadState: (state: any) => managerRef.current?.fromJSON(state),
         zoomIn,
         zoomOut,
+        zoomToFit,
+        zoomTo100,
         resetView,
+        toggleGuides,
+        toggleGrid,
+        toggleSnapToGrid,
         // New methods for properties panel
         getSelectedElementData: () =>
           managerRef.current?.getSelectedElementData(),
@@ -564,6 +1250,14 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
         updateFontStyle: withStateUpdate(
           (style: "normal" | "italic") =>
             managerRef.current?.updateFontStyle(style) || false
+        ),
+        updateOpacity: withStateUpdate(
+          (opacity: number) =>
+            managerRef.current?.updateOpacity(opacity) || false
+        ),
+        updateVisibility: withStateUpdate(
+          (visible: boolean) =>
+            managerRef.current?.updateVisibility(visible) || false
         ),
         updateTextDecoration: withStateUpdate(
           (decoration: "none" | "underline" | "line-through") =>
@@ -602,6 +1296,13 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
         ),
         // Method for PropertiesPanel layers tab
         getAllTexts: () => managerRef.current?.getAllTexts() || [],
+        // Template methods
+        loadTemplate: (templateData: any) => {
+    console.log("🎨 EditorStage: loadTemplate called with:", templateData);
+    return managerRef.current?.loadTemplate(templateData);
+  },
+        getCurrentTemplate: () => managerRef.current?.getCurrentTemplate(),
+        exportAsTemplate: (metadata: any) => managerRef.current?.exportAsTemplate(metadata),
       };
     }, [
       addText,
@@ -625,22 +1326,25 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
     useImperativeHandle(ref, () => exposedActions, [exposedActions]);
 
     // Notify parent of state changes
+    // Memoize the state to prevent unnecessary calls to onStateChange
+    const currentState = useMemo(() => ({
+      zoom,
+      designPx,
+      elementCount: managerRef.current?.getAllTexts().length || 0,
+      selectedElement,
+    }), [zoom, designPx.widthPx, designPx.heightPx, selectedElement?.id]);
+
     useEffect(() => {
-      const state = {
-        zoom,
-        designPx,
-        elementCount: managerRef.current?.getAllTexts().length || 0,
-        selectedElement,
-      };
-      onStateChange?.(state);
-    }, [zoom, designPx, selectedElement, onStateChange]);
+      onStateChange?.(currentState);
+    }, [currentState, onStateChange]);
 
     return (
-      <div className="w-full h-full bg-white">
+      <div key={dimensionsKey} className="w-full h-full bg-white">
         <div
           id="editor-viewport"
           ref={viewportRef}
-          className="relative w-full h-full bg-gray-50"
+          className="relative w-full h-full bg-gray-50 min-h-[600px] min-w-[400px]"
+          style={{ minWidth: '400px', minHeight: '600px' }}
         >
           <div id="stage-wrap" ref={stageWrapRef} className="absolute inset-0">
             <div
@@ -651,7 +1355,14 @@ const EditorStage = forwardRef<EditorStageRef, EditorStageProps>(
             <div
               id="html-overlay"
               ref={overlayRef}
-              className="absolute inset-0 pointer-events-none"
+              className="absolute pointer-events-none"
+              style={{
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                transformOrigin: 'top left'
+              }}
             ></div>
           </div>
         </div>

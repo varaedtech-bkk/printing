@@ -12,7 +12,7 @@ export default function Designer() {
   useEffect(() => {
     // Auto-redirect after a short delay to show the page
     const timer = setTimeout(() => {
-      navigate('/konva-demo');
+      navigate('/ai-designer');
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -30,21 +30,21 @@ export default function Designer() {
       icon: Upload,
       title: "Upload Design",
       description: "Import your own design file",
-      action: () => navigate('/konva-demo'),
+      action: () => navigate('/ai-designer'),
       color: "from-green-500 to-green-600"
     },
     {
       icon: Sparkles,
       title: "AI Designer",
       description: "Let AI create designs for you",
-      action: () => navigate('/konva-demo'),
+      action: () => navigate('/ai-designer'),
       color: "from-purple-500 to-purple-600"
     },
     {
       icon: Palette,
       title: "Blank Canvas",
       description: "Start from scratch",
-      action: () => navigate('/konva-demo'),
+      action: () => navigate('/ai-designer'),
       color: "from-orange-500 to-orange-600"
     }
   ];
@@ -62,7 +62,7 @@ export default function Designer() {
             Create stunning designs with our advanced AI tools. Choose how you'd like to start your design journey.
           </p>
           <Button
-            onClick={() => navigate('/konva-demo')}
+            onClick={() => navigate('/ai-designer')}
             className="bg-primary text-white hover:bg-primary-600 text-lg px-8 py-4"
           >
             Open Designer

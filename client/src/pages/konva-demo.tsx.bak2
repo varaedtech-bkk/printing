@@ -186,7 +186,7 @@ export default function KonvaDemo() {
   const MOCK_TEMPLATES = [
     {
       id: "template-1",
-      name: "Modern Business Card",
+    name: "Modern Business Card",
     category: "business-cards",
     background: "#ffffff",
     accentColor: "#3b82f6",
@@ -429,6 +429,7 @@ const MOCK_PRODUCTS = [
   },
 ];
 
+export default function KonvaDemo() {
   const { toast } = useToast();
   const { userId } = useAuth();
   const { cartCount } = useCart();
@@ -461,7 +462,7 @@ const MOCK_PRODUCTS = [
   const [showAITools, setShowAITools] = useState(false);
   const [designName, setDesignName] = useState("Untitled Design");
   const [showCartDialog, setShowCartDialog] = useState(false);
-  const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
+  const [showPropertiesPanel, setShowPropertiesPanel] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(1);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -469,9 +470,10 @@ const MOCK_PRODUCTS = [
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [currentTemplate, setCurrentTemplate] = useState<Template | null>(null);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
   const [canvasDimensions, setCanvasDimensions] = useState({
-    width: 210, // A4 width in mm
-    height: 297, // A4 height in mm
+    width: 840, // A4 width in pixels (210mm at 4px/mm)
+    height: 1188, // A4 height in pixels (297mm at 4px/mm)
   });
 
   // Load template from URL parameters
@@ -725,9 +727,9 @@ const MOCK_PRODUCTS = [
             if (!editorRef.current) return;
 
             // Ensure canvas dimensions are reasonable
-            if (canvasDimensions.width < 50 || canvasDimensions.height < 50) {
+            if (canvasDimensions.width < 100 || canvasDimensions.height < 100) {
               console.warn("🎨 Canvas dimensions too small, using defaults");
-              setCanvasDimensions({ width: 210, height: 297 }); // A4 in mm
+              setCanvasDimensions({ width: 400, height: 300 });
               return;
             }
 
@@ -1900,15 +1902,15 @@ const MOCK_PRODUCTS = [
         onAddToCart={handleAddToCart}
         onAddText={() => {
           if (editorRef.current?.addText) {
-            const centerX = (canvasDimensions.width * 4) / 2; // Convert mm to pixels (4px = 1mm)
-            const centerY = (canvasDimensions.height * 4) / 2; // Convert mm to pixels (4px = 1mm)
+            const centerX = canvasDimensions.width / 2;
+            const centerY = canvasDimensions.height / 2;
             editorRef.current.addText(centerX, centerY);
           }
         }}
         onAddShape={(shape) => {
           if (editorRef.current?.addShape) {
-            const centerX = (canvasDimensions.width * 4) / 2; // Convert mm to pixels (4px = 1mm)
-            const centerY = (canvasDimensions.height * 4) / 2; // Convert mm to pixels (4px = 1mm)
+            const centerX = canvasDimensions.width / 2;
+            const centerY = canvasDimensions.height / 2;
             editorRef.current.addShape(shape, centerX, centerY);
           }
         }}
@@ -1920,8 +1922,8 @@ const MOCK_PRODUCTS = [
             const file = (e.target as HTMLInputElement).files?.[0];
             if (file && editorRef.current?.addImage) {
               const url = URL.createObjectURL(file);
-              const centerX = (canvasDimensions.width * 4) / 2; // Convert mm to pixels (4px = 1mm)
-              const centerY = (canvasDimensions.height * 4) / 2; // Convert mm to pixels (4px = 1mm)
+              const centerX = canvasDimensions.width / 2;
+              const centerY = canvasDimensions.height / 2;
               editorRef.current.addImage(url, centerX, centerY);
             }
           };
@@ -2155,9 +2157,6 @@ const MOCK_PRODUCTS = [
           removeBackgroundMutation={generateColorPaletteMutation}
           generateTextMutation={generateDesignMutation}
           generateColorPaletteMutation={generateColorPaletteMutation}
-          beautifyDesignMutation={generateDesignMutation}
-          generateLayoutSuggestionsMutation={generateDesignMutation}
-          generateImageSuggestionsMutation={generateDesignMutation}
         />
       )}
     </div>

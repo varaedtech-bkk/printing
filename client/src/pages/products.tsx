@@ -63,7 +63,7 @@ export default function Products() {
       const priceResponse = await calculatePriceMutation.mutateAsync({
         productId: product.id,
         quantity: 1,
-        selectedOptions: {}, // Should be an object, not an array
+        selectedOptions: [], // Should be an array, not an object
       });
       const priceData = await priceResponse.json();
 

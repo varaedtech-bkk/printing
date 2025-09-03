@@ -69,7 +69,7 @@ export default function ProductCategories() {
         unitPrice: priceData.basePrice.toString(),
         totalPrice: priceData.totalPrice.toString(),
         designProjectId: null,
-        selectedOptions: {}, // Should be an object, not an array
+        selectedOptions: [], // Should be an array, not an object
         updatedAt: new Date(),
       });
       toast({

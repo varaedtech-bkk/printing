@@ -1,0 +1,336 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  Type, 
+  Square, 
+  Circle, 
+  Triangle, 
+  Image as ImageIcon,
+  Grid3X3,
+  Brain,
+  Menu,
+  X,
+  Plus,
+  Save,
+  Undo,
+  Redo,
+  Download,
+  Settings,
+  Eye,
+  EyeOff,
+  ShoppingCart,
+  Check,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  FlipHorizontal,
+  FlipVertical,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Copy,
+  Trash2,
+  Layers,
+  MoreHorizontal,
+  MousePointer2,
+  Minus
+} from 'lucide-react';
+
+interface FloatingToolbarProps {
+  selectedTool: string;
+  setSelectedTool: (tool: string) => void;
+  zoom: number;
+  setZoom: (zoom: number) => void;
+  showGuides: boolean;
+  setShowGuides: (show: boolean) => void;
+  showGrid: boolean;
+  setShowGrid: (show: boolean) => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  onSave: () => void;
+  onExport: () => void;
+  onTemplateGalleryOpen: () => void;
+  onAIPanelOpen: () => void;
+  onAddText: () => void;
+  onAddToCart: () => void;
+  onAddShape: (shape: string) => void;
+  onAddImage: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  editorRef: any;
+  canvasDimensions: { width: number; height: number };
+  showPropertiesPanel?: boolean;
+  onTogglePropertiesPanel?: () => void;
+}
+
+// Tool definitions
+const mainTools = [
+  { id: 'select', icon: MousePointer2, label: 'Select', title: 'Select Tool' },
+  { id: 'text', icon: Type, label: 'Text', title: 'Add Text' },
+  { 
+    id: 'shape', 
+    icon: Square, 
+    label: 'Shapes', 
+    title: 'Add a Shape',
+    subTools: [
+      { id: 'rectangle', icon: Square, label: 'Rectangle', onClick: (onAddShape: (shape: string) => void) => onAddShape('rectangle') },
+      { id: 'circle', icon: Circle, label: 'Circle', onClick: (onAddShape: (shape: string) => void) => onAddShape('circle') },
+      { id: 'triangle', icon: Triangle, label: 'Triangle', onClick: (onAddShape: (shape: string) => void) => onAddShape('triangle') },
+    ]
+  },
+  { id: 'image', icon: ImageIcon, label: 'Image', title: 'Add Image' },
+];
+
+const actionTools = [
+  { id: 'undo', icon: Undo, label: 'Undo', key: 'canUndo' },
+  { id: 'redo', icon: Redo, label: 'Redo', key: 'canRedo' },
+  { id: 'save', icon: Save, label: 'Save', title: 'Save Design' },
+  { id: 'export', icon: Download, label: 'Export', title: 'Export Design' },
+];
+
+const viewTools = [
+  { id: 'zoom-out', icon: ZoomOut, label: 'Zoom-', title: 'Zoom Out' },
+  { id: 'zoom-in', icon: ZoomIn, label: 'Zoom+', title: 'Zoom In' },
+  { id: 'guides', icon: Eye, activeIcon: EyeOff, label: 'Guides', title: 'Toggle Guides' },
+  { id: 'grid', icon: Grid3X3, label: 'Grid', title: 'Toggle Grid' },
+];
+
+const specialTools = [
+  { id: 'templates', icon: Grid3X3, label: 'Templates', title: 'Open Templates' },
+  { id: 'ai', icon: Brain, label: 'AI', title: 'Open AI Tools' },
+];
+
+
+export function FloatingToolbar({
+  selectedTool,
+  setSelectedTool,
+  zoom,
+  setZoom,
+  showGuides,
+  setShowGuides,
+  showGrid,
+  setShowGrid,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  onSave,
+  onExport,
+  onTemplateGalleryOpen,
+  onAIPanelOpen,
+  onAddText,
+  onAddToCart,
+  onAddShape,
+  onAddImage,
+  onZoomIn,
+  onZoomOut,
+  editorRef,
+  canvasDimensions,
+  showPropertiesPanel = true,
+  onTogglePropertiesPanel
+}: FloatingToolbarProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState(() => ({
+    x: 20,
+    y: typeof window !== 'undefined' && window.innerWidth < 768 ? 80 : 20
+  }));
+  const [isCollapsed, setIsCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [showShapeOptions, setShowShapeOptions] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === toolbarRef.current || (e.target as HTMLElement).closest('.drag-handle')) {
+      setIsDragging(true);
+      dragStart.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      };
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      const newX = e.clientX - dragStart.current.x;
+      const newY = e.clientY - dragStart.current.y;
+      
+      // Keep toolbar within viewport bounds
+      const toolbarWidth = toolbarRef.current?.offsetWidth || 0;
+      const maxX = window.innerWidth - toolbarWidth;
+      const maxY = window.innerHeight - 60;
+      
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, position]);
+
+  const ToolButton = ({ 
+    icon: Icon, 
+    label, 
+    onClick, 
+    isActive = false, 
+    variant = "outline",
+    disabled = false,
+    title
+  }: {
+    icon: any;
+    label: string;
+    onClick: () => void;
+    isActive?: boolean;
+    variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
+    disabled?: boolean;
+    title?: string;
+  }) => (
+    <Button
+      variant={isActive ? "default" : variant}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`h-7 md:h-8 px-1 md:px-2 text-xs flex items-center space-x-1 ${
+        isActive ? 'bg-blue-600 text-white' : ''
+      }`}
+      title={title || label}
+    >
+      <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+      {!isCollapsed && <span className="hidden sm:inline">{label}</span>}
+    </Button>
+  );
+
+  return (
+    <div
+      ref={toolbarRef}
+      className={`fixed z-50 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg transition-all duration-200 flex items-center p-1 md:p-2 space-x-1 md:space-x-2 ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      } ${isCollapsed ? 'w-auto' : ''} ${
+        !isCollapsed ? 'max-w-[calc(100vw-2rem)] md:max-w-none overflow-x-auto' : ''
+      }`}
+      style={{
+        left: position.x,
+        top: position.y,
+        transform: isDragging ? 'scale(1.02)' : 'scale(1)'
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      {/* Drag Handle */}
+      <div className="drag-handle cursor-grab p-1">
+        <MoreHorizontal size={16} className="text-gray-400" />
+      </div>
+
+      {!isCollapsed && (
+        <>
+          {/* Main Tools - Always visible */}
+          <div className="flex items-center space-x-1 border-r border-gray-200 pr-1 md:pr-2">
+            {mainTools.slice(0, 3).map((tool) => (
+              <div key={tool.id} className="relative">
+                <ToolButton
+                  icon={tool.icon}
+                  label={tool.label}
+                  onClick={() => {
+                    if (tool.id === 'shape') {
+                      setShowShapeOptions(!showShapeOptions);
+                    } else {
+                      setSelectedTool(tool.id);
+                      if (tool.id === 'text') onAddText();
+                      if (tool.id === 'image') onAddImage();
+                      setShowShapeOptions(false);
+                    }
+                  }}
+                  isActive={selectedTool === tool.id || (tool.id === 'shape' && showShapeOptions)}
+                  title={tool.title}
+                />
+                {tool.id === 'shape' && showShapeOptions && (
+                  <div className="absolute top-full mt-2 w-32 bg-white border rounded-md shadow-lg z-10">
+                    {tool.subTools?.map((subTool) => (
+                      <button
+                        key={subTool.id}
+                        onClick={() => {
+                          subTool.onClick(onAddShape);
+                          setSelectedTool('shape');
+                          setShowShapeOptions(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <subTool.icon className="w-4 h-4" />
+                        <span>{subTool.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Essential Tools - Hidden on very small screens */}
+          <div className="hidden sm:flex items-center space-x-1 border-r border-gray-200 pr-1 md:pr-2">
+            <ToolButton icon={Undo} label="Undo" onClick={onUndo} disabled={!canUndo} title="Undo" />
+            <ToolButton icon={Redo} label="Redo" onClick={onRedo} disabled={!canRedo} title="Redo" />
+          </div>
+
+          {/* View Tools - Hidden on small screens */}
+          <div className="hidden md:flex items-center space-x-1 border-r border-gray-200 pr-1 md:pr-2">
+            <ToolButton icon={ZoomOut} label="Zoom-" onClick={onZoomOut || (() => setZoom(Math.max(0.25, zoom - 0.1)))} title="Zoom Out" />
+            <span className="text-xs text-gray-600 px-1 hidden lg:inline">{Math.round(zoom * 100)}%</span>
+            <ToolButton icon={ZoomIn} label="Zoom+" onClick={onZoomIn || (() => setZoom(Math.min(2, zoom + 0.1)))} title="Zoom In" />
+          </div>
+
+          {/* Action Tools - Hidden on small screens */}
+          <div className="hidden lg:flex items-center space-x-1 border-r border-gray-200 pr-1 md:pr-2">
+            <ToolButton icon={Save} label="Save" onClick={onSave} title="Save Design" />
+            <ToolButton icon={ShoppingCart} label="Cart" onClick={onAddToCart} title="Add to Cart" />
+            <ToolButton icon={Download} label="Export" onClick={onExport} title="Export Design" />
+          </div>
+
+          {/* Special Tools */}
+          <div className="flex items-center space-x-1">
+            <ToolButton
+              icon={Settings}
+              label="Properties"
+              onClick={onTogglePropertiesPanel || (() => {})}
+              title={showPropertiesPanel ? "Hide Properties Panel" : "Show Properties Panel"}
+              variant={showPropertiesPanel ? "default" : "outline"}
+            />
+            <div className="hidden md:flex items-center space-x-1">
+              <ToolButton icon={Grid3X3} label="Templates" onClick={onTemplateGalleryOpen} title="Open Templates" />
+              <ToolButton icon={Brain} label="AI" onClick={onAIPanelOpen} title="Open AI Tools" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Collapse Toggle */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="h-8 w-8 p-0"
+        title={isCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
+      >
+        {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+      </Button>
+    </div>
+  );
+}

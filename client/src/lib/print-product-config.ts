@@ -56,6 +56,25 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     priceRange: '฿80-300'
   },
 
+  // Postcards
+  {
+    id: 'postcard-standard',
+    name: 'ไปรษณียบัตรมาตรฐาน',
+    nameEn: 'Standard Postcard',
+    category: 'business-cards', // Using business-cards category since postcards are similar
+    dimensions: {
+      width: 148,
+      height: 105,
+      bleed: 3,
+      safeZone: 6,
+      dpi: 300
+    },
+    previewScale: 0.388, // 148mm / 381 DPI ≈ 0.388
+    description: 'Standard postcard size',
+    useCases: ['Marketing campaigns', 'Event invitations', 'Greetings'],
+    priceRange: '฿100-300'
+  },
+
   // Flyers
   {
     id: 'flyer-a4',

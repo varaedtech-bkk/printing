@@ -55,6 +55,10 @@ interface PropertiesPanelProps {
   setQuantity: (quantity: number) => void;
   designName: string;
   setDesignName: (name: string) => void;
+  onPropertyChange: (property: string, value: any) => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   resizeCanvas?: (width: number, height: number) => boolean;
   forceRefreshCanvas?: () => void;
   createTestObject?: () => boolean;
@@ -83,6 +87,10 @@ export function PropertiesPanel({
   setQuantity,
   designName,
   setDesignName,
+  onPropertyChange,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
   resizeCanvas,
   forceRefreshCanvas,
   createTestObject
@@ -93,6 +101,66 @@ export function PropertiesPanel({
   const [layersUpdateTrigger, setLayersUpdateTrigger] = useState(0);
   const [canvasWidth, setCanvasWidth] = useState(canvasDimensions.width);
   const [canvasHeight, setCanvasHeight] = useState(canvasDimensions.height);
+
+  // Draggable state
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Drag handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.drag-handle')) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+      e.preventDefault();
+    }
+  }, [position]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+
+      // Constrain to viewport
+      const maxX = window.innerWidth - 320; // Panel width
+      const maxY = window.innerHeight - 200; // Minimum height
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Add/remove event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Property update status tracking
   const [updateStatus, setUpdateStatus] = useState<Record<string, UpdateStatus>>({});
@@ -111,6 +179,7 @@ export function PropertiesPanel({
   // Debug logging for selectedElementData
   useEffect(() => {
     console.log('🔍 PropertiesPanel - selectedElementData changed:', selectedElementData);
+    console.log('🔍 PropertiesPanel - full element data:', JSON.stringify(selectedElementData, null, 2));
     if (selectedElementData) {
       console.log('🔍 PropertiesPanel - selectedElementData details:', {
         type: selectedElementData.type,
@@ -118,7 +187,11 @@ export function PropertiesPanel({
         style: selectedElementData.style,
         color: selectedElementData.style?.color,
         hasText: selectedElementData.content !== undefined,
-        isTextType: selectedElementData.type === 'text'
+        isTextType: selectedElementData.type === 'text',
+        isImageType: selectedElementData.type === 'image',
+        hasPosition: !!selectedElementData.position,
+        hasSize: !!selectedElementData.size,
+        hasStyle: !!selectedElementData.style
       });
     } else {
       console.log('🔍 PropertiesPanel - No element selected');
@@ -181,16 +254,34 @@ export function PropertiesPanel({
     }
   }, [toast]);
 
-  // Debounced property update to prevent excessive updates
+  // Enhanced debounced property update with different delays for different operations
   const debouncedUpdateProperty = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return (propertyName: string, updateFn: () => boolean, successMessage?: string) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
+    const timeouts = new Map<string, NodeJS.Timeout>();
+
+    return (propertyName: string, updateFn: () => boolean, successMessage?: string, delay: number = 150) => {
+      // Clear existing timeout for this property
+      const existingTimeout = timeouts.get(propertyName);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Set new timeout
+      const timeoutId = setTimeout(() => {
         updateProperty(propertyName, updateFn, successMessage);
-      }, 100);
+        timeouts.delete(propertyName); // Clean up after execution
+      }, delay);
+
+      timeouts.set(propertyName, timeoutId);
     };
   }, [updateProperty]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      // This would be called on unmount, but we can't access the timeouts map here
+      // The timeouts will be cleaned up by the garbage collector
+    };
+  }, []);
 
   const presetSizes = [
     { id: 'business-card', name: 'Business Card', width: 350, height: 200, icon: '💼' },
@@ -217,8 +308,15 @@ export function PropertiesPanel({
     );
   }
 
+
+
+
+
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div
+      ref={panelRef}
+      className="h-full flex flex-col bg-white"
+    >
       {/* Header */}
       <div className="bg-gray-50 border-b border-gray-200 p-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center space-x-2">
@@ -229,11 +327,15 @@ export function PropertiesPanel({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsCollapsed(true)}
+            onClick={() => setIsCollapsed(!isCollapsed)}
             className="h-6 w-6 p-0 hover:bg-gray-200"
-            title="Collapse Panel"
+            title={isCollapsed ? "Expand Panel" : "Collapse Panel"}
           >
-            <ChevronRight className="w-3 h-3" />
+            {isCollapsed ? (
+              <ChevronRight className="w-3 h-3" />
+            ) : (
+              <ChevronLeft className="w-3 h-3" />
+            )}
           </Button>
         </div>
       </div>
@@ -265,20 +367,106 @@ export function PropertiesPanel({
                 </div>
 
                 {/* Element Type */}
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Type className="w-4 h-4" />
-                  <span>
-                    {selectedElementData.type === 'text' ? 'Text Element' : 
-                     selectedElementData.type === 'rectangle' ? 'Rectangle' :
-                     selectedElementData.type === 'circle' ? 'Circle' :
-                     selectedElementData.type === 'ellipse' ? 'Ellipse' :
-                     selectedElementData.type === 'triangle' ? 'Triangle' :
-                     'Shape Element'}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Type className="w-4 h-4" />
+                    <span>
+                      {selectedElementData && selectedElementData.type === 'text' ? 'Text Element' :
+                       selectedElementData && selectedElementData.type === 'image' ? 'Image Element' :
+                       selectedElementData && selectedElementData.type === 'rectangle' ? 'Rectangle' :
+                       selectedElementData && selectedElementData.type === 'circle' ? 'Circle' :
+                       selectedElementData && selectedElementData.type === 'ellipse' ? 'Ellipse' :
+                       selectedElementData && selectedElementData.type === 'triangle' ? 'Triangle' :
+                       selectedElementData ? 'Shape Element' : 'Unknown Element'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => editorRef?.current?.duplicateSelected()}
+                      className="h-6 px-2 text-xs"
+                      title="Duplicate Element"
+                    >
+                      <Square className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onDeleteSelected}
+                      className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                      title="Delete Element"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Quick Actions</Label>
+                  <div className="flex flex-wrap gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (editorRef?.current?.alignObjects) {
+                          editorRef.current.alignObjects('left');
+                        }
+                      }}
+                      className="h-7 px-2 text-xs"
+                      title="Align Left"
+                    >
+                      <AlignLeft className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (editorRef?.current?.alignObjects) {
+                          editorRef.current.alignObjects('center');
+                        }
+                      }}
+                      className="h-7 px-2 text-xs"
+                      title="Align Center"
+                    >
+                      <AlignCenter className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (editorRef?.current?.alignObjects) {
+                          editorRef.current.alignObjects('right');
+                        }
+                      }}
+                      className="h-7 px-2 text-xs"
+                      title="Align Right"
+                    >
+                      <AlignRight className="w-3 h-3" />
+                    </Button>
+                    {selectedElementData?.type === 'text' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (editorRef?.current?.updateFontWeight) {
+                            const currentWeight = selectedElementData.style?.fontWeight;
+                            const newWeight = currentWeight === 'bold' ? 'normal' : 'bold';
+                            editorRef.current.updateFontWeight(newWeight);
+                          }
+                        }}
+                        className="h-7 px-2 text-xs"
+                        title="Toggle Bold"
+                      >
+                        <Bold className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Text Content */}
-                {selectedElementData.type === 'text' && (
+                {selectedElementData && selectedElementData.type === 'text' && (
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between">
@@ -321,7 +509,7 @@ export function PropertiesPanel({
                     {selectedElementData.style?.fontSize && (
                       <div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs text-gray-600">Font Size: {selectedElementData.style.fontSize}px</Label>
+                          <Label className="text-xs text-gray-600">Font Size: {selectedElementData.style?.fontSize}px</Label>
                           {updateStatus['fontSize']?.success && (
                             <Check className="w-3 h-3 text-green-500" />
                           )}
@@ -414,9 +602,25 @@ export function PropertiesPanel({
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div
-                          className="w-6 h-6 rounded border border-gray-300"
-                          style={{ backgroundColor: selectedElementData.style?.color || '#000000' }}
+                        <input
+                          type="color"
+                          value={selectedElementData.style?.color || '#000000'}
+                          onChange={(e) => {
+                            const newColor = e.target.value;
+                            console.log('🎨 PropertiesPanel: Color changed to', newColor);
+                            debouncedUpdateProperty('textColor', () => {
+                              console.log('🎨 PropertiesPanel: Calling updateColor with', newColor);
+                              if (editorRef?.current?.updateColor) {
+                                const result = editorRef.current.updateColor(newColor);
+                                console.log('🎨 PropertiesPanel: updateColor result:', result);
+                                return result;
+                              }
+                              console.warn('⚠️ PropertiesPanel: updateColor method not available');
+                              return false;
+                            });
+                          }}
+                          className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                          title="Click to select text color"
                         />
                         <Input
                           value={selectedElementData.style?.color || '#000000'}
@@ -438,6 +642,7 @@ export function PropertiesPanel({
                             updateStatus['textColor']?.loading ? 'opacity-50' : ''
                           }`}
                           disabled={updateStatus['textColor']?.loading}
+                          placeholder="#000000"
                         />
                       </div>
                       {updateStatus['textColor']?.loading && (
@@ -637,25 +842,113 @@ export function PropertiesPanel({
                   </div>
                 )}
 
+                {/* Image Properties */}
+                {(() => { console.log("🎨 Checking image properties condition:", selectedElementData?.type === 'image', "type:", selectedElementData?.type, "hasData:", !!selectedElementData); return null; })()}
+                {selectedElementData && selectedElementData.type === 'image' && (
+                  <div className="space-y-3">
+                    {(() => { console.log("🎨 Rendering image properties for:", selectedElementData); return null; })()}
+                    {/* Image Source */}
+                    <div>
+                      <Label className="text-xs text-gray-600">Image Source</Label>
+                      <div className="text-xs text-gray-500 truncate bg-gray-50 p-2 rounded border">
+                        {selectedElementData.style?.src ?
+                          selectedElementData.style.src.split('/').pop() :
+                          'No source available'}
+                      </div>
+                    </div>
+
+                    {/* Image Opacity */}
+                    <div>
+                      <Label className="text-xs text-gray-600">Opacity: {Math.round((selectedElementData.style?.opacity || 1) * 100)}%</Label>
+                      <Slider
+                        value={[selectedElementData.style?.opacity || 1]}
+                        onValueChange={(value) => {
+                          console.log("🎛️ Opacity slider changed to:", value[0]);
+                          debouncedUpdateProperty('opacity', () => {
+                            console.log("🎛️ Calling updateOpacity with:", value[0]);
+                            if (editorRef?.current?.updateOpacity) {
+                              const result = editorRef.current.updateOpacity(value[0]);
+                              console.log("🎛️ updateOpacity result:", result);
+                              return result;
+                            }
+                            console.log("🎛️ updateOpacity method not available");
+                            return false;
+                          });
+                        }}
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Image Visibility */}
+                    <div>
+                      <Label className="text-xs text-gray-600">Visibility</Label>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant={selectedElementData.style?.visible !== false ? "default" : "outline"}
+                          size="sm"
+                                                  onClick={() => {
+                          const newVisible = !(selectedElementData.style?.visible !== false);
+                          console.log("👁️ Visibility toggle clicked, new value:", newVisible);
+                          debouncedUpdateProperty('visible', () => {
+                            console.log("👁️ Calling updateVisibility with:", newVisible);
+                            if (editorRef?.current?.updateVisibility) {
+                              const result = editorRef.current.updateVisibility(newVisible);
+                              console.log("👁️ updateVisibility result:", result);
+                              return result;
+                            }
+                            console.log("👁️ updateVisibility method not available");
+                            return false;
+                          });
+                        }}
+                          className="h-8 px-3 text-xs"
+                        >
+                          {selectedElementData.style?.visible !== false ? (
+                            <>
+                              <Eye className="w-3 h-3 mr-1" />
+                              Visible
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3 h-3 mr-1" />
+                              Hidden
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Shape Properties */}
-                {selectedElementData.type !== 'text' && (
+                {selectedElementData && selectedElementData.type !== 'text' && selectedElementData.type !== 'image' && (
                   <div className="space-y-3">
                     {/* Fill Color */}
                     <div>
                       <Label className="text-xs text-gray-600">Fill Color</Label>
                       <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-6 h-6 rounded border border-gray-300"
-                          style={{ backgroundColor: selectedElementData.style?.fill || '#000000' }} // Changed to .style.fill
+                        <input
+                          type="color"
+                          value={selectedElementData.style?.fill || '#000000'}
+                          onChange={(e) => {
+                            if (editorRef?.current?.updateShapeFillColor) {
+                              editorRef.current.updateShapeFillColor(e.target.value);
+                            }
+                          }}
+                          className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                          title="Click to select fill color"
                         />
                         <Input
-                          value={selectedElementData.style?.fill || '#000000'} // Changed to .style.fill
+                          value={selectedElementData.style?.fill || '#000000'}
                           onChange={(e) => {
                             if (editorRef?.current?.updateShapeFillColor) {
                               editorRef.current.updateShapeFillColor(e.target.value);
                             }
                           }}
                           className="h-8 text-xs flex-1"
+                          placeholder="#000000"
                         />
                       </div>
                     </div>
@@ -664,18 +957,26 @@ export function PropertiesPanel({
                     <div>
                       <Label className="text-xs text-gray-600">Stroke Color</Label>
                       <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-6 h-6 rounded border border-gray-300"
-                          style={{ backgroundColor: selectedElementData.style?.stroke || '#000000' }} // Changed to .style.stroke
+                        <input
+                          type="color"
+                          value={selectedElementData.style?.stroke || '#000000'}
+                          onChange={(e) => {
+                            if (editorRef?.current?.updateShapeStrokeColor) {
+                              editorRef.current.updateShapeStrokeColor(e.target.value);
+                            }
+                          }}
+                          className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                          title="Click to select stroke color"
                         />
                         <Input
-                          value={selectedElementData.style?.stroke || '#000000'} // Changed to .style.stroke
+                          value={selectedElementData.style?.stroke || '#000000'}
                           onChange={(e) => {
                             if (editorRef?.current?.updateShapeStrokeColor) {
                               editorRef.current.updateShapeStrokeColor(e.target.value);
                             }
                           }}
                           className="h-8 text-xs flex-1"
+                          placeholder="#000000"
                         />
                       </div>
                     </div>
@@ -763,27 +1064,63 @@ export function PropertiesPanel({
 
                 {/* Size */}
                 {selectedElementData.size?.width && selectedElementData.size?.height && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs text-gray-600">Width</Label>
-                      <Input
-                        type="number"
-                        value={Math.round(selectedElementData.size?.width || 0)}
-                        disabled
-                        className="h-8 text-xs bg-gray-50 cursor-not-allowed"
-                        title="Size editing not yet implemented"
-                      />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-gray-600">Size</Label>
+                      {updateStatus['size']?.success && (
+                        <Check className="w-3 h-3 text-green-500" />
+                      )}
+                      {updateStatus['size']?.error && (
+                        <span title={updateStatus['size'].error}>
+                          <AlertCircle className="w-3 h-3 text-red-500" />
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">Height</Label>
-                      <Input
-                        type="number"
-                        value={Math.round(selectedElementData.size?.height || 0)}
-                        disabled
-                        className="h-8 text-xs bg-gray-50 cursor-not-allowed"
-                        title="Size editing not yet implemented"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-gray-600">Width</Label>
+                        <Input
+                          type="number"
+                          value={Math.round(selectedElementData.size?.width || 0)}
+                          onChange={(e) => {
+                            const width = parseFloat(e.target.value) || 0;
+                            debouncedUpdateProperty('size', () => {
+                              if (editorRef?.current?.updateShapeSize) {
+                                return editorRef.current.updateShapeSize(width, selectedElementData.size?.height || 0);
+                              }
+                              return false;
+                            });
+                          }}
+                          className={`h-8 text-xs ${
+                            updateStatus['size']?.loading ? 'opacity-50' : ''
+                          }`}
+                          disabled={updateStatus['size']?.loading}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Height</Label>
+                        <Input
+                          type="number"
+                          value={Math.round(selectedElementData.size?.height || 0)}
+                          onChange={(e) => {
+                            const height = parseFloat(e.target.value) || 0;
+                            debouncedUpdateProperty('size', () => {
+                              if (editorRef?.current?.updateShapeSize) {
+                                return editorRef.current.updateShapeSize(selectedElementData.size?.width || 0, height);
+                              }
+                              return false;
+                            });
+                          }}
+                          className={`h-8 text-xs ${
+                            updateStatus['size']?.loading ? 'opacity-50' : ''
+                          }`}
+                          disabled={updateStatus['size']?.loading}
+                        />
+                      </div>
                     </div>
+                    {updateStatus['size']?.loading && (
+                      <div className="text-xs text-blue-500">Updating size...</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -793,6 +1130,7 @@ export function PropertiesPanel({
                   <Square className="w-6 h-6 text-gray-400" />
                 </div>
                 <p className="text-sm">Select an element to edit its properties</p>
+                <p className="text-xs text-gray-400 mt-2">Use the toolbar to add text, shapes, or images</p>
               </div>
             )}
           </TabsContent>
@@ -880,10 +1218,47 @@ export function PropertiesPanel({
           {/* Layers Tab */}
           <TabsContent value="layers" className="space-y-4 mt-4">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Layers</h3>
-              
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Layers</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Refresh layers
+                    setLayersUpdateTrigger(prev => prev + 1);
+                  }}
+                  className="h-8 text-xs"
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              {/* Layer Actions */}
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editorRef?.current?.duplicateSelected()}
+                  disabled={!selectedElementData}
+                  className="flex-1 h-8 text-xs"
+                >
+                  <Square className="w-3 h-3 mr-1" />
+                  Duplicate
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDeleteSelected}
+                  disabled={!selectedElementData}
+                  className="flex-1 h-8 text-xs text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete
+                </Button>
+              </div>
+
               {/* Layer List */}
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-60 overflow-y-auto">
                 {(() => {
                   console.log('📋 PropertiesPanel: Checking getAllTexts method');
                   const raw = editorRef?.current?.getAllTexts ? editorRef.current.getAllTexts() : [];
@@ -895,36 +1270,79 @@ export function PropertiesPanel({
                         id: t.id,
                         content: t.div.innerText,
                         style: { fontSize: parseInt(t.div.style.fontSize) || 16 },
+                        type: 'text',
+                        selected: selectedElementData?.id === t.id
                       };
                     }
                     return t || {};
                   });
+
                   return texts.map((text: any, index: number) => (
                     <div
-                      key={text.id || index}
-                      className="flex items-center justify-between p-2 border border-gray-200 rounded-md"
+                      key={`${text.id || index}-${layersUpdateTrigger}`}
+                      className={`flex items-center justify-between p-2 border rounded-md cursor-pointer transition-colors ${
+                        text.selected
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => {
+                        // Select the element when clicked
+                        if (editorRef?.current?.selectElementById) {
+                          editorRef.current.selectElementById(text.id);
+                        }
+                      }}
                     >
-                      <div className="flex items-center space-x-2">
-                        <Type className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <Type className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-sm truncate">
                           {text.content || `Text ${index + 1}`}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         <span className="text-xs text-gray-500">
                           {text.style?.fontSize || 16}px
                         </span>
+                        {text.selected && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        )}
                       </div>
                     </div>
                   ))
                 })()}
+
                 {(() => {
                   const texts = editorRef?.current?.getAllTexts ? editorRef.current.getAllTexts() : [];
                   return (!texts || texts.length === 0) ? (
-                    <p className="text-sm text-gray-500">No layers available</p>
+                    <div className="text-center py-6 text-gray-500">
+                      <Layers className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No layers available</p>
+                      <p className="text-xs text-gray-400 mt-1">Add text or shapes to see layers</p>
+                    </div>
                   ) : null;
                 })()}
               </div>
+
+              {/* Layer Statistics */}
+              {(() => {
+                const texts = editorRef?.current?.getAllTexts ? editorRef.current.getAllTexts() : [];
+                if (texts && texts.length > 0) {
+                  return (
+                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      <div className="flex justify-between">
+                        <span>Total layers:</span>
+                        <span className="font-medium">{texts.length}</span>
+                      </div>
+                      {selectedElementData && (
+                        <div className="flex justify-between mt-1">
+                          <span>Selected:</span>
+                          <span className="font-medium text-blue-600">Layer {texts.findIndex((t: any) => t.id === selectedElementData.id) + 1}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </TabsContent>
         </Tabs>

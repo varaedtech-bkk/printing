@@ -7,7 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import Designer from "@/pages/designer";
-import KonvaDemo from "@/pages/konva-demo";
+import AIDesigner from "@/pages/ai-designer";
 import Cart from "@/pages/cart";
 import Templates from "@/pages/templates";
 import Contact from "@/pages/contact";
@@ -31,8 +31,8 @@ function Router() {
       {/* Designer requires a product ID */}
       <Route path="/designer" component={Designer} />
       <Route path="/designer/:productId" component={Designer} />
-      {/* New Konva-based designer */}
-      <Route path="/konva-demo" component={KonvaDemo} />
+      {/* AI Designer */}
+      <Route path="/ai-designer" component={AIDesigner} />
       <Route path="/templates" component={Templates} />
       <Route path="/contact" component={Contact} />
       <Route path="/cart" component={Cart} />

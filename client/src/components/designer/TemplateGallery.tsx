@@ -5,19 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Grid, List, Eye, Download, Star } from 'lucide-react';
-
-interface Template {
-  id: string;
-  title: string;
-  description?: string;
-  category: string;
-  tags: string[];
-  thumbnailUrl?: string;
-  baseProductId?: string;
-  createdAt: string;
-  templateData?: any; // Full template data for immediate loading
-}
+import { Search, Filter, Grid, List, Eye, Download, Star, Sparkles, Brain, Zap, X, Plus } from 'lucide-react';
+import { Template, TemplateCategory } from '@/lib/template-schema';
+import { templateService } from '@/lib/template-service';
+import { aiService, createAITemplateRequest } from '@/lib/ai-service';
 
 interface TemplateGalleryProps {
   onSelectTemplate: (template: Template) => void;
@@ -25,415 +16,220 @@ interface TemplateGalleryProps {
   currentProductId?: string;
 }
 
-const CATEGORIES = [
-  'business-cards',
-  'flyers',
-  'posters',
-  'brochures',
-  'letterheads',
-  'envelopes',
-  'stickers',
-  'banners'
-];
+// AI Template Generation Component
+const AITemplateGenerator: React.FC<{
+  onGenerate: (template: Template) => void;
+  onClose: () => void;
+  currentProductId?: string;
+}> = ({ onGenerate, onClose, currentProductId }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [productType, setProductType] = useState('Business Card');
+  const [keywords, setKeywords] = useState('');
+  const [style, setStyle] = useState('modern');
+  const [industry, setIndustry] = useState('');
 
-const SAMPLE_TEMPLATES: Template[] = [
-  {
-    id: '1',
-    title: 'Modern Blue Business Card',
-    description: 'Professional business card with modern blue design',
-    category: 'business-cards',
-    tags: ['modern', 'professional', 'blue', 'corporate'],
-    thumbnailUrl: '/api/placeholder/300/200',
-    baseProductId: 'std_bc_55x85mm_300gsm',
-    createdAt: new Date().toISOString(),
-    templateData: {
-      layers: [
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const request = createAITemplateRequest(
+        productType,
+        keywords.split(',').map(k => k.trim()).filter(k => k),
         {
-          id: 'background',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 55,
-          height: 85,
-          fill: '#3498db',
-          editableColor: true,
-          colorVariable: 'primaryColor'
-        },
-        {
-          id: 'company_name',
-          type: 'text',
-          content: 'YOUR COMPANY NAME',
-          x: 10,
-          y: 15,
-          fontSize: 14,
-          fontFamily: 'Arial',
-          color: '#ffffff',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Company Name',
-          lockFont: true
-        },
-        {
-          id: 'person_name',
-          type: 'text',
-          content: 'YOUR NAME',
-          x: 10,
-          y: 35,
-          fontSize: 18,
-          fontFamily: 'Arial',
-          color: '#ffffff',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Full Name',
-          lockFont: true
-        },
-        {
-          id: 'job_title',
-          type: 'text',
-          content: 'Job Title',
-          x: 10,
-          y: 55,
-          fontSize: 12,
-          fontFamily: 'Arial',
-          color: '#ffffff',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Job Title',
-          lockFont: false
-        },
-        {
-          id: 'logo_placeholder',
-          type: 'image',
-          x: 20,
-          y: 65,
-          width: 15,
-          height: 15,
-          isPlaceholder: true,
-          placeholderHint: 'Upload Your Logo'
+          style: style as any,
+          industry: industry || undefined,
+          dimensions: currentProductId ? { width: 55, height: 85, unit: 'mm' } : undefined
         }
-      ],
-      background: '#3498db'
+      );
+
+      const response = await aiService.generateTemplate(request);
+      onGenerate(response.template);
+    } catch (error) {
+      console.error('Failed to generate AI template:', error);
+    } finally {
+      setIsGenerating(false);
     }
-  },
-  {
-    id: '2',
-    title: 'Elegant White Business Card',
-    description: 'Clean and elegant white business card design',
-    category: 'business-cards',
-    tags: ['elegant', 'clean', 'white', 'minimalist'],
-    thumbnailUrl: '/api/placeholder/300/200',
-    baseProductId: 'std_bc_55x85mm_300gsm',
-    createdAt: new Date().toISOString(),
-    templateData: {
-      layers: [
-        {
-          id: 'background',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 55,
-          height: 85,
-          fill: '#ffffff',
-          stroke: '#e0e0e0',
-          strokeWidth: 1
-        },
-        {
-          id: 'accent_line',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 55,
-          height: 3,
-          fill: '#2c3e50',
-          editableColor: true,
-          colorVariable: 'accentColor'
-        },
-        {
-          id: 'person_name',
-          type: 'text',
-          content: 'YOUR NAME',
-          x: 10,
-          y: 20,
-          fontSize: 20,
-          fontFamily: 'Georgia',
-          color: '#2c3e50',
-          fontWeight: 'bold',
-          textAlign: 'left',
-          userEditable: true,
-          fieldName: 'Full Name',
-          lockFont: true
-        },
-        {
-          id: 'job_title',
-          type: 'text',
-          content: 'Professional Title',
-          x: 10,
-          y: 40,
-          fontSize: 14,
-          fontFamily: 'Arial',
-          color: '#7f8c8d',
-          textAlign: 'left',
-          userEditable: true,
-          fieldName: 'Job Title',
-          lockFont: false
-        },
-        {
-          id: 'contact_info',
-          type: 'text',
-          content: 'email@company.com • +1 (555) 123-4567',
-          x: 10,
-          y: 60,
-          fontSize: 12,
-          fontFamily: 'Arial',
-          color: '#34495e',
-          textAlign: 'left',
-          userEditable: true,
-          fieldName: 'Contact Info',
-          lockFont: false
-        }
-      ],
-      background: '#ffffff'
-    }
-  },
-  {
-    id: '3',
-    title: 'Sale Flyer Template',
-    description: 'Eye-catching sale flyer with bold design',
-    category: 'flyers',
-    tags: ['sale', 'bold', 'attention-grabbing', 'marketing'],
-    thumbnailUrl: '/api/placeholder/300/200',
-    baseProductId: 'std_flyer_a4_300gsm',
-    createdAt: new Date().toISOString(),
-    templateData: {
-      layers: [
-        {
-          id: 'background',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 210,
-          height: 297,
-          fill: '#e74c3c',
-          editableColor: true,
-          colorVariable: 'primaryColor'
-        },
-        {
-          id: 'sale_banner',
-          type: 'rect',
-          x: 20,
-          y: 20,
-          width: 170,
-          height: 60,
-          fill: '#ffffff',
-          stroke: '#f39c12',
-          strokeWidth: 3
-        },
-        {
-          id: 'sale_text',
-          type: 'text',
-          content: 'MEGA SALE!',
-          x: 105,
-          y: 50,
-          fontSize: 32,
-          fontFamily: 'Arial',
-          color: '#e74c3c',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Sale Title',
-          lockFont: true
-        },
-        {
-          id: 'description',
-          type: 'text',
-          content: 'Up to 70% OFF on selected items!',
-          x: 105,
-          y: 120,
-          fontSize: 18,
-          fontFamily: 'Arial',
-          color: '#ffffff',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Sale Description',
-          lockFont: false
-        },
-        {
-          id: 'product_image',
-          type: 'image',
-          x: 60,
-          y: 160,
-          width: 90,
-          height: 90,
-          isPlaceholder: true,
-          placeholderHint: 'Product Image'
-        }
-      ],
-      background: '#e74c3c'
-    }
-  },
-  {
-    id: '4',
-    title: 'Corporate Poster',
-    description: 'Professional corporate poster template',
-    category: 'posters',
-    tags: ['corporate', 'professional', 'business', 'formal'],
-    thumbnailUrl: '/api/placeholder/300/200',
-    baseProductId: 'std_poster_a3_300gsm',
-    createdAt: new Date().toISOString(),
-    templateData: {
-      layers: [
-        {
-          id: 'background',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 297,
-          height: 420,
-          fill: '#2c3e50',
-          editableColor: true,
-          colorVariable: 'primaryColor'
-        },
-        {
-          id: 'header_bar',
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: 297,
-          height: 80,
-          fill: '#34495e'
-        },
-        {
-          id: 'company_logo',
-          type: 'image',
-          x: 20,
-          y: 20,
-          width: 40,
-          height: 40,
-          isPlaceholder: true,
-          placeholderHint: 'Company Logo'
-        },
-        {
-          id: 'title',
-          type: 'text',
-          content: 'CORPORATE EVENT',
-          x: 148.5,
-          y: 120,
-          fontSize: 36,
-          fontFamily: 'Arial',
-          color: '#ffffff',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Event Title',
-          lockFont: true
-        },
-        {
-          id: 'subtitle',
-          type: 'text',
-          content: 'Professional Development Workshop',
-          x: 148.5,
-          y: 170,
-          fontSize: 24,
-          fontFamily: 'Arial',
-          color: '#ecf0f1',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Event Subtitle',
-          lockFont: false
-        },
-        {
-          id: 'date_time',
-          type: 'text',
-          content: 'Date: TBD • Time: TBD',
-          x: 148.5,
-          y: 220,
-          fontSize: 18,
-          fontFamily: 'Arial',
-          color: '#bdc3c7',
-          textAlign: 'center',
-          userEditable: true,
-          fieldName: 'Date & Time',
-          lockFont: false
-        }
-      ],
-      background: '#2c3e50'
-    }
-  }
-];
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Brain className="w-5 h-5 text-purple-600" />
+            AI Template Generator
+          </h3>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="productType">Product Type</Label>
+            <Select value={productType} onValueChange={setProductType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Business Card">Business Card</SelectItem>
+                <SelectItem value="Flyer">Flyer</SelectItem>
+                <SelectItem value="Poster">Poster</SelectItem>
+                <SelectItem value="Brochure">Brochure</SelectItem>
+                <SelectItem value="Letterhead">Letterhead</SelectItem>
+                <SelectItem value="Banner">Banner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="keywords">Keywords (comma-separated)</Label>
+            <Input
+              id="keywords"
+              placeholder="modern, professional, blue, corporate"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="style">Style</Label>
+            <Select value={style} onValueChange={setStyle}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="modern">Modern</SelectItem>
+                <SelectItem value="classic">Classic</SelectItem>
+                <SelectItem value="minimalist">Minimalist</SelectItem>
+                <SelectItem value="bold">Bold</SelectItem>
+                <SelectItem value="elegant">Elegant</SelectItem>
+                <SelectItem value="playful">Playful</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="industry">Industry (optional)</Label>
+            <Input
+              id="industry"
+              placeholder="Technology, Healthcare, Finance..."
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleGenerate} 
+              disabled={isGenerating}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Template
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }: TemplateGalleryProps) {
-  const [templates, setTemplates] = useState<Template[]>(SAMPLE_TEMPLATES);
-  const [filteredTemplates, setFilteredTemplates] = useState<Template[]>(SAMPLE_TEMPLATES);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [filteredTemplates, setFilteredTemplates] = useState<Template[]>([]);
+  const [categories, setCategories] = useState<TemplateCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
+
+  // Load templates and categories
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Load categories
+        const categoriesData = await templateService.getCategories();
+        setCategories(categoriesData);
+        
+        // Load templates
+        const filters = {
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          isPublic: true
+        };
+        
+        const templatesResult = await templateService.fetchTemplates(filters);
+        setTemplates(templatesResult.templates);
+      } catch (error) {
+        console.error('Failed to load template data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [selectedCategory]);
 
   // Filter templates based on search and category
   useEffect(() => {
-    let filtered = templates;
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(template => template.category === selectedCategory);
-    }
+    let filtered = templates || [];
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(template =>
-        template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        template.metadata.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.metadata.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     // Filter by current product if specified
     if (currentProductId) {
       filtered = filtered.filter(template => 
-        !template.baseProductId || template.baseProductId === currentProductId
+        !template.metadata.baseProductId || template.metadata.baseProductId === currentProductId
       );
     }
 
     setFilteredTemplates(filtered);
-  }, [templates, searchTerm, selectedCategory, currentProductId]);
-
-  // Load templates from API (when available)
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/templates');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setTemplates(data.templates);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load templates:', error);
-        // Keep using sample templates
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTemplates();
-  }, []);
+  }, [templates, searchTerm, currentProductId]);
 
   const handleTemplateSelect = (template: Template) => {
     onSelectTemplate(template);
     onClose();
   };
 
+  const handleAIGenerate = (template: Template) => {
+    onSelectTemplate(template);
+    onClose();
+  };
+
   const getCategoryLabel = (category: string) => {
-    return category.split('-').map(word => 
+    const categoryData = categories.find(c => c.id === category);
+    return categoryData?.name || category.split('-').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
 
   const getCategoryColor = (category: string) => {
+    const categoryData = categories.find(c => c.id === category);
+    if (categoryData?.color) {
+      return `bg-${categoryData.color}-100 text-${categoryData.color}-800`;
+    }
+    
     const colors: Record<string, string> = {
       'business-cards': 'bg-blue-100 text-blue-800',
       'flyers': 'bg-green-100 text-green-800',
@@ -449,20 +245,31 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[85vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-4 border-b">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Choose a Template</h2>
-            <p className="text-gray-600 mt-1">Start with a professionally designed template</p>
+            <h2 className="text-xl font-bold text-gray-900">Choose a Template</h2>
+            <p className="text-gray-500 text-sm">Start with a professionally designed template or create one with AI</p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowAIGenerator(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 border-0"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              AI Generate
+            </Button>
           <Button variant="ghost" size="sm" onClick={onClose}>
             ✕
           </Button>
+          </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="p-6 border-b bg-gray-50">
+        <div className="p-4 border-b bg-gray-50">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -487,9 +294,10 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {CATEGORIES.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {getCategoryLabel(category)}
+                  {categories.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.icon && <span className="mr-2">{category.icon}</span>}
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -518,14 +326,61 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
           </div>
         </div>
 
+        {/* Quick Start Templates */}
+        <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Start</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Blank Canvas Option */}
+            <div
+              className="bg-white rounded-lg p-3 border border-gray-200 hover:border-green-300 hover:shadow-md transition-all cursor-pointer"
+              onClick={() => {
+                // Clear canvas and start fresh
+                onSelectTemplate(null as any);
+                onClose();
+              }}
+            >
+              <div className="aspect-[3/2] bg-gradient-to-br from-green-100 to-blue-100 rounded mb-2 flex items-center justify-center">
+                <Plus className="w-6 h-6 text-green-600" />
+              </div>
+              <h4 className="text-xs font-medium text-gray-900">Blank Canvas</h4>
+              <p className="text-xs text-gray-500">Start from scratch</p>
+            </div>
+
+            {filteredTemplates?.slice(0, 3).map((template) => (
+              <div
+                key={`quick-${template.metadata.id}`}
+                className="bg-white rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => handleTemplateSelect(template)}
+              >
+                <div className="aspect-[3/2] bg-gray-100 rounded mb-2 flex items-center justify-center">
+                  {template.metadata.thumbnailUrl ? (
+                    <img
+                      src={template.metadata.thumbnailUrl}
+                      alt={template.metadata.title}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  ) : (
+                    <div className="text-gray-400 text-center p-1">
+                      <Eye className="w-4 h-4 mx-auto mb-1" />
+                      <p className="text-xs">Preview</p>
+                    </div>
+                  )}
+                </div>
+                <h4 className="text-xs font-medium text-gray-900 truncate">{template.metadata.title}</h4>
+                <p className="text-xs text-gray-500 truncate">{template.metadata.category}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Templates Grid/List */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-4 overflow-y-auto max-h-[50vh]">
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading templates...</p>
             </div>
-          ) : filteredTemplates.length === 0 ? (
+          ) : !filteredTemplates || filteredTemplates.length === 0 ? (
             <div className="text-center py-12">
               <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
@@ -536,9 +391,9 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
               ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
               : 'space-y-4'
             }>
-              {filteredTemplates.map((template) => (
+              {filteredTemplates?.map((template) => (
                 <Card 
-                  key={template.id} 
+                  key={template.metadata.id} 
                   className={`cursor-pointer hover:shadow-lg transition-shadow ${
                     viewMode === 'list' ? 'flex' : ''
                   }`}
@@ -547,10 +402,10 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
                   {viewMode === 'grid' ? (
                     <>
                       <div className="aspect-[3/2] bg-gray-100 rounded-t-lg flex items-center justify-center">
-                        {template.thumbnailUrl ? (
+                        {template.metadata.thumbnailUrl ? (
                           <img 
-                            src={template.thumbnailUrl} 
-                            alt={template.title}
+                            src={template.metadata.thumbnailUrl} 
+                            alt={template.metadata.title}
                             className="w-full h-full object-cover rounded-t-lg"
                           />
                         ) : (
@@ -562,38 +417,55 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
                       </div>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <Badge className={getCategoryColor(template.category)}>
-                            {getCategoryLabel(template.category)}
+                          <Badge className={getCategoryColor(template.metadata.category)}>
+                            {getCategoryLabel(template.metadata.category)}
                           </Badge>
-                          <Star className="w-4 h-4 text-gray-400" />
+                          <div className="flex items-center gap-1">
+                            {template.metadata.rating && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                <span className="text-xs text-gray-600">{template.metadata.rating}</span>
+                              </div>
+                            )}
+                            {template.metadata.isPremium && (
+                              <Badge variant="outline" className="text-xs text-purple-600">
+                                Premium
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
-                          {template.title}
+                          {template.metadata.title}
                         </h3>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {template.description}
+                          {template.metadata.description}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {template.tags.slice(0, 3).map((tag) => (
+                          {template.metadata.tags.slice(0, 3).map((tag) => (
                             <Badge key={tag} variant="outline" className="text-xs">
                               {tag}
                             </Badge>
                           ))}
-                          {template.tags.length > 3 && (
+                          {template.metadata.tags.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{template.tags.length - 3}
+                              +{template.metadata.tags.length - 3}
                             </Badge>
                           )}
                         </div>
+                        {template.metadata.downloads && (
+                          <div className="text-xs text-gray-500 mt-2">
+                            {template.metadata.downloads.toLocaleString()} downloads
+                          </div>
+                        )}
                       </CardContent>
                     </>
                   ) : (
                     <>
                       <div className="w-24 h-24 bg-gray-100 rounded-l-lg flex items-center justify-center flex-shrink-0">
-                        {template.thumbnailUrl ? (
+                        {template.metadata.thumbnailUrl ? (
                           <img 
-                            src={template.thumbnailUrl} 
-                            alt={template.title}
+                            src={template.metadata.thumbnailUrl} 
+                            alt={template.metadata.title}
                             className="w-full h-full object-cover rounded-l-lg"
                           />
                         ) : (
@@ -607,26 +479,33 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900 mb-1">
-                              {template.title}
+                              {template.metadata.title}
                             </h3>
                             <p className="text-sm text-gray-600 mb-2">
-                              {template.description}
+                              {template.metadata.description}
                             </p>
                           </div>
-                          <Badge className={getCategoryColor(template.category)}>
-                            {getCategoryLabel(template.category)}
+                          <div className="flex items-center gap-2">
+                            <Badge className={getCategoryColor(template.metadata.category)}>
+                              {getCategoryLabel(template.metadata.category)}
+                            </Badge>
+                            {template.metadata.isPremium && (
+                              <Badge variant="outline" className="text-xs text-purple-600">
+                                Premium
                           </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex flex-wrap gap-1">
-                            {template.tags.slice(0, 2).map((tag) => (
+                            {template.metadata.tags.slice(0, 2).map((tag) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 {tag}
                               </Badge>
                             ))}
-                            {template.tags.length > 2 && (
+                            {template.metadata.tags.length > 2 && (
                               <Badge variant="outline" className="text-xs">
-                                +{template.tags.length - 2}
+                                +{template.metadata.tags.length - 2}
                               </Badge>
                             )}
                           </div>
@@ -645,10 +524,10 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t bg-gray-50">
+        <div className="p-4 border-t bg-gray-50">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} found
+              {filteredTemplates?.length || 0} template{(filteredTemplates?.length || 0) !== 1 ? 's' : ''} found
             </p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>
@@ -662,6 +541,15 @@ export function TemplateGallery({ onSelectTemplate, onClose, currentProductId }:
           </div>
         </div>
       </div>
+
+      {/* AI Template Generator Modal */}
+      {showAIGenerator && (
+        <AITemplateGenerator
+          onGenerate={handleAIGenerate}
+          onClose={() => setShowAIGenerator(false)}
+          currentProductId={currentProductId}
+        />
+      )}
     </div>
   );
 }
